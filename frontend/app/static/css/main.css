@@ -1,0 +1,327 @@
+/* Main CSS with Responsive Breakpoints for Ytili Platform */
+
+/* Tablet Styles (768px and up) */
+@media (min-width: 768px) {
+    .hero-section {
+        padding: 4rem 0;
+        text-align: left;
+    }
+    
+    .hero-section h1 {
+        font-size: 3rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 1.25rem;
+    }
+    
+    /* Tablet button groups */
+    .btn-group-mobile {
+        flex-direction: row;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .btn-group-mobile .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+    
+    /* Tablet stats */
+    .stats-section .card {
+        margin-bottom: 0;
+    }
+    
+    .stats-section i {
+        font-size: 3rem;
+    }
+    
+    /* Tablet navigation */
+    .navbar-nav .nav-link {
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Tablet emergency section */
+    .emergency-section {
+        text-align: left;
+    }
+    
+    .emergency-section h2 {
+        font-size: 2.5rem;
+    }
+    
+    /* Hide mobile-only elements */
+    .mobile-only {
+        display: none;
+    }
+    
+    .mobile-hidden {
+        display: block;
+    }
+}
+
+/* Desktop Styles (992px and up) */
+@media (min-width: 992px) {
+    .hero-section {
+        padding: 5rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 3.5rem;
+    }
+    
+    /* Desktop cards */
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* Desktop stats */
+    .stats-section i {
+        font-size: 3.5rem;
+    }
+    
+    /* Desktop emergency section */
+    .emergency-section h2 {
+        font-size: 3rem;
+    }
+}
+
+/* Large Desktop Styles (1200px and up) */
+@media (min-width: 1200px) {
+    .hero-section {
+        padding: 6rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 4rem;
+    }
+    
+    .container {
+        max-width: 1140px;
+    }
+}
+
+/* Extra Large Desktop Styles (1400px and up) */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1320px;
+    }
+}
+
+/* High DPI / Retina Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .feature-card {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    }
+    
+    .btn {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light-color: #2d3748;
+        --dark-color: #f7fafc;
+    }
+    
+    .card {
+        background-color: #2d3748;
+        border-color: #4a5568;
+        color: #f7fafc;
+    }
+    
+    .stats-section {
+        background-color: #1a202c;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .feature-card {
+        transition: none;
+    }
+    
+    .btn {
+        transition: none;
+    }
+    
+    .loading::after {
+        animation: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    .footer,
+    .btn,
+    .hero-section {
+        display: none !important;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Landscape Mobile Optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.8rem;
+    }
+    
+    .navbar {
+        padding: 0.25rem 1rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .feature-card:hover {
+        transform: none;
+    }
+    
+    .btn:hover {
+        transform: none;
+    }
+    
+    /* Larger touch targets for touch devices */
+    .btn {
+        min-height: 48px;
+    }
+    
+    .form-control {
+        min-height: 48px;
+    }
+    
+    .nav-link {
+        min-height: 48px;
+    }
+}
+
+/* Specific Mobile Device Optimizations */
+
+/* iPhone SE and similar small screens */
+@media (max-width: 375px) {
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+    
+    .btn-lg {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+/* iPhone 12/13/14 and similar */
+@media (max-width: 390px) {
+    .hero-section {
+        padding: 2.5rem 0;
+    }
+}
+
+/* Large phones like iPhone Plus/Max */
+@media (min-width: 414px) and (max-width: 767px) {
+    .hero-section h1 {
+        font-size: 2.25rem;
+    }
+    
+    .stats-section i {
+        font-size: 3rem;
+    }
+}
+
+/* Tablet Portrait */
+@media (min-width: 768px) and (max-width: 991px) {
+    .hero-section {
+        padding: 4rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 2.75rem;
+    }
+}
+
+/* Animation Classes for Mobile */
+.fade-in-mobile {
+    animation: fadeInMobile 0.5s ease-in-out;
+}
+
+@keyframes fadeInMobile {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in-mobile {
+    animation: slideInMobile 0.3s ease-out;
+}
+
+@keyframes slideInMobile {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Mobile-specific utility classes */
+.mobile-text-sm {
+    font-size: 0.875rem;
+}
+
+.mobile-text-lg {
+    font-size: 1.125rem;
+}
+
+.mobile-p-2 {
+    padding: 0.5rem !important;
+}
+
+.mobile-p-3 {
+    padding: 1rem !important;
+}
+
+.mobile-m-2 {
+    margin: 0.5rem !important;
+}
+
+.mobile-m-3 {
+    margin: 1rem !important;
+}
+
+/* Safe area support for devices with notches */
+@supports (padding: max(0px)) {
+    .navbar {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+    }
+    
+    .container {
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+    }
+}

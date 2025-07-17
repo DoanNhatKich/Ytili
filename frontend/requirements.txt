@@ -1,0 +1,23 @@
+# Ytili Frontend Requirements (Flask)
+# Core Flask framework
+Flask==3.1.1
+flask-wtf==1.2.2
+WTForms==3.2.1
+
+# HTTP client for API calls
+httpx==0.28.1
+requests==2.32.3
+
+# Environment configuration
+python-dotenv==1.1.1
+
+# Template and static file handling
+Jinja2==3.1.5
+MarkupSafe==3.0.2
+
+# Security
+cryptography==45.0.5
+
+# Development and testing
+pytest==8.3.4
+pytest-flask==1.3.0

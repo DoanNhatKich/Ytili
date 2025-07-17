@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: ytili_postgres
+    environment:
+      POSTGRES_DB: ytili_db
+      POSTGRES_USER: ytili_user
+      POSTGRES_PASSWORD: ytili_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ytili_network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: ytili_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ytili_network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ytili_backend
+    environment:
+      - DATABASE_URL=postgresql://ytili_user:ytili_password@postgres:5432/ytili_db
+      - REDIS_URL=redis://redis:6379
+      - DEBUG=True
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    networks:
+      - ytili_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend Web App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ytili_frontend
+    environment:
+      - BACKEND_API_URL=http://backend:8000
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+    networks:
+      - ytili_network
+    command: python -m app.main
+
+  # Celery Worker (for background tasks)
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ytili_celery_worker
+    environment:
+      - DATABASE_URL=postgresql://ytili_user:ytili_password@postgres:5432/ytili_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    networks:
+      - ytili_network
+    command: celery -A app.core.celery worker --loglevel=info
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  ytili_network:
+    driver: bridge

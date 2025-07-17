@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Ytili{% endblock %}
+
+{% block content %}
+<div class="container mobile-container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow mobile-spacing">
+                <div class="card-body mobile-p-3">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">
+                            <i class="fas fa-heart text-danger"></i> Ytili
+                        </h2>
+                        <p class="text-muted">Create your account</p>
+                    </div>
+
+                    <form method="POST" class="mobile-form">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.email.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
+                                                 placeholder="Enter your email",
+                                                 autocomplete="email",
+                                                 inputmode="email") }}
+                                </div>
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.full_name.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else ""),
+                                                     placeholder="Enter your full name",
+                                                     autocomplete="name") }}
+                                </div>
+                                {% if form.full_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.full_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.password.label(class="form-label") }}
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                                {% if form.password.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.confirm_password.label(class="form-label") }}
+                                {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "")) }}
+                                {% if form.confirm_password.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.confirm_password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.user_type.label(class="form-label") }}
+                                {{ form.user_type(class="form-select" + (" is-invalid" if form.user_type.errors else ""), id="userTypeSelect") }}
+                                {% if form.user_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.user_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="organizationFields" class="d-none">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.organization_name.label(class="form-label") }}
+                                    {{ form.organization_name(class="form-control" + (" is-invalid" if form.organization_name.errors else "")) }}
+                                    {% if form.organization_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.organization_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    {{ form.license_number.label(class="form-label") }}
+                                    {{ form.license_number(class="form-control" + (" is-invalid" if form.license_number.errors else "")) }}
+                                    {% if form.license_number.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.license_number.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.address.label(class="form-label") }}
+                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else "")) }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.province.label(class="form-label") }}
+                                {{ form.province(class="form-control" + (" is-invalid" if form.province.errors else "")) }}
+                                {% if form.province.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.province.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mb-3">
+                            {{ form.submit(class="btn btn-primary btn-lg w-mobile-100", id="registerBtn") }}
+                        </div>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0 mobile-text-sm">
+                            Already have an account?
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none btn-link-mobile">Login here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Show/hide organization fields based on user type
+    document.addEventListener('DOMContentLoaded', function() {
+        const userTypeSelect = document.getElementById('userTypeSelect');
+        const organizationFields = document.getElementById('organizationFields');
+        
+        function toggleOrganizationFields() {
+            if (userTypeSelect.value === 'hospital' || userTypeSelect.value === 'organization') {
+                organizationFields.classList.remove('d-none');
+            } else {
+                organizationFields.classList.add('d-none');
+            }
+        }
+        
+        userTypeSelect.addEventListener('change', toggleOrganizationFields);
+        toggleOrganizationFields(); // Initial state
+    });
+</script>
+{% endblock %}
+{% endblock %}
+

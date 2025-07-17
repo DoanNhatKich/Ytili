@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-07-17 11:05:27",
+  "tests": {
+    "admin_login": {
+      "success": false,
+      "status_code": 401,
+      "duration": 2.6719393730163574,
+      "target_met": false,
+      "email": "admin@ytili.com",
+      "error": {
+        "detail": "Invalid email or password"
+      }
+    },
+    "registration": {
+      "success": true,
+      "status_code": 200,
+      "duration": 3.5982680320739746,
+      "target_met": false,
+      "user_email": "test_jcxantpd@example.com",
+      "response_data": {
+        "message": "User registered successfully",
+        "user_id": "7765e415-4e41-4c8a-9d1a-306992be5ee7",
+        "email_confirmation_sent": true,
+        "user_profile": {
+          "id": "b09d0365-2989-451c-a8b3-86099a0c21ef",
+          "email": "test_jcxantpd@example.com",
+          "phone": "+84103615415",
+          "full_name": "Test User jcxantpd",
+          "user_type": "individual",
+          "status": "verified",
+          "is_email_verified": true,
+          "is_phone_verified": false,
+          "is_kyc_verified": false,
+          "organization_name": null,
+          "license_number": null,
+          "tax_id": null,
+          "address": null,
+          "city": "Ho Chi Minh City",
+          "province": "Ho Chi Minh",
+          "country": "Vietnam",
+          "created_at": "2025-07-17T04:05:34.32921+00:00",
+          "updated_at": "2025-07-17T04:05:34.32921+00:00",
+          "last_login": null,
+          "auth_user_id": "7765e415-4e41-4c8a-9d1a-306992be5ee7"
+        }
+      }
+    },
+    "new_user_login": {
+      "success": true,
+      "status_code": 200,
+      "duration": 2.746540069580078,
+      "target_met": false,
+      "email": "test_jcxantpd@example.com",
+      "response_data": {
+        "message": "Login successful",
+        "access_token": "eyJhbGciOiJIUzI1NiIsImtpZCI6Ii9Nd2RSOEtIdEVIL3dtSjQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3hoc3VhamF0ZmNzbXJlYnJscWh4LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3NzY1ZTQxNS00ZTQxLTRjOGEtOWQxYS0zMDY5OTJiZTVlZTciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzUyNzI4NzM2LCJpYXQiOjE3NTI3MjUxMzYsImVtYWlsIjoidGVzdF9qY3hhbnRwZEBleGFtcGxlLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJ0ZXN0X2pjeGFudHBkQGV4YW1wbGUuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IlRlc3QgVXNlciBqY3hhbnRwZCIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwicGxhdGZvcm0iOiJ5dGlsaSIsInN1YiI6Ijc3NjVlNDE1LTRlNDEtNGM4YS05ZDFhLTMwNjk5MmJlNWVlNyIsInVzZXJfdHlwZSI6ImluZGl2aWR1YWwifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1MjcyNTEzNn1dLCJzZXNzaW9uX2lkIjoiZWM5OTAzYzktNjI5Ny00MzIxLTgyMjUtZDVkMTE2Y2U4MGRjIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.kvO-okwPHwow55Aajws5ml0OuYHCWE1lnzwMdh0QIjE",
+        "token_type": "bearer",
+        "user": {
+          "id": "b09d0365-2989-451c-a8b3-86099a0c21ef",
+          "auth_user_id": "7765e415-4e41-4c8a-9d1a-306992be5ee7",
+          "email": "test_jcxantpd@example.com",
+          "full_name": "Test User jcxantpd",
+          "user_type": "individual",
+          "status": "verified",
+          "is_email_verified": true,
+          "is_kyc_verified": false,
+          "organization_name": null,
+          "phone": "+84103615415",
+          "city": "Ho Chi Minh City",
+          "province": "Ho Chi Minh",
+          "created_at": "2025-07-17T04:05:34.32921+00:00"
+        },
+        "expires_in": 3600
+      }
+    }
+  }
+}

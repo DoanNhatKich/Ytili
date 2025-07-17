@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Fundraising Campaigns - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-hand-holding-usd"></i> Fundraising Campaigns
+                    </h1>
+                    <p class="text-muted">Support medical causes and help save lives through community fundraising</p>
+                </div>
+                <div class="d-none d-md-block">
+                    <a href="{{ url_for('fundraising.create') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Start Campaign
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Browse by Category</h5>
+                    <div class="row">
+                        {% if categories %}
+                            {% for category in categories %}
+                            <div class="col-md-3 col-6 mb-3">
+                                <a href="{{ url_for('fundraising.category', category=category.id) }}" class="text-decoration-none">
+                                    <div class="text-center p-3 border rounded hover-shadow">
+                                        <i class="{{ category.icon }} fa-2x text-primary mb-2"></i>
+                                        <h6 class="mb-0">{{ category.name }}</h6>
+                                        <small class="text-muted">{{ category.description }}</small>
+                                    </div>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="col-md-3 col-6 mb-3">
+                            <a href="{{ url_for('fundraising.category', category='emergency_medical') }}" class="text-decoration-none">
+                                <div class="text-center p-3 border rounded hover-shadow">
+                                    <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
+                                    <h6 class="mb-0">Emergency Medical</h6>
+                                    <small class="text-muted">12 active campaigns</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <a href="{{ url_for('fundraising.category', category='children_health') }}" class="text-decoration-none">
+                                <div class="text-center p-3 border rounded hover-shadow">
+                                    <i class="fas fa-child fa-2x text-info mb-2"></i>
+                                    <h6 class="mb-0">Children's Health</h6>
+                                    <small class="text-muted">8 active campaigns</small>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-3 col-6 mb-3">
+                            <a href="#" class="text-decoration-none">
+                                <div class="text-center p-3 border rounded hover-shadow">
+                                    <i class="fas fa-procedures fa-2x text-warning mb-2"></i>
+                                    <h6 class="mb-0">Surgery & Treatment</h6>
+                                    <small class="text-muted">15 active campaigns</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <a href="#" class="text-decoration-none">
+                                <div class="text-center p-3 border rounded hover-shadow">
+                                    <i class="fas fa-hospital fa-2x text-success mb-2"></i>
+                                    <h6 class="mb-0">Hospital Equipment</h6>
+                                    <small class="text-muted">6 active campaigns</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Campaigns -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="fw-bold mb-3">
+                <i class="fas fa-star text-warning"></i> Featured Campaigns
+            </h3>
+        </div>
+
+        {% if campaigns %}
+            {% for campaign in campaigns[:3] %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header
+                        {% if campaign.urgency_level == 'urgent' %}bg-danger
+                        {% elif campaign.urgency_level == 'high' %}bg-warning
+                        {% else %}bg-info
+                        {% endif %} text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-light text-dark">{{ campaign.urgency_level.upper() }}</span>
+                            <small><i class="fas fa-clock"></i> {{ campaign.days_left }} days left</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ campaign.title }}</h5>
+                        <p class="card-text text-muted">
+                            {{ campaign.description[:100] }}{% if campaign.description|length > 100 %}...{% endif %}
+                        </p>
+                        <div class="progress mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {{ campaign.progress_percentage }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <small class="text-muted">{{ "{:,.0f}".format(campaign.current_amount) }} VND raised</small>
+                            <small class="text-muted">{{ campaign.progress_percentage }}% of {{ "{:,.0f}".format(campaign.target_amount) }} VND</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-success">
+                                <i class="fas fa-users"></i> {{ campaign.donor_count }} donors
+                            </small>
+                            <a href="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-heart"></i> Donate Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No campaigns available</h4>
+                <p class="text-muted">Be the first to start a fundraising campaign!</p>
+                <a href="{{ url_for('fundraising.create') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Start Campaign
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Campaigns -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold">
+                    <i class="fas fa-clock"></i> Recent Campaigns
+                </h3>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">All Categories</a></li>
+                        <li><a class="dropdown-item" href="#">Emergency Medical</a></li>
+                        <li><a class="dropdown-item" href="#">Children's Health</a></li>
+                        <li><a class="dropdown-item" href="#">Surgery & Treatment</a></li>
+                        <li><a class="dropdown-item" href="#">Hospital Equipment</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Grid -->
+    <div class="row" id="campaignGrid">
+        {% if campaigns %}
+            {% for campaign in campaigns[3:] %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">
+                                <a href="{{ url_for('fundraising.detail', campaign_id=campaign.id) }}" class="text-decoration-none">
+                                    {{ campaign.title[:40] }}{% if campaign.title|length > 40 %}...{% endif %}
+                                </a>
+                            </h6>
+                            <span class="badge
+                                {% if campaign.status == 'active' %}bg-success
+                                {% elif campaign.status == 'pending' %}bg-warning
+                                {% elif campaign.status == 'completed' %}bg-primary
+                                {% else %}bg-secondary
+                                {% endif %}">{{ campaign.status.title() }}</span>
+                        </div>
+                        <p class="card-text text-muted small">
+                            {{ campaign.description[:80] }}{% if campaign.description|length > 80 %}...{% endif %}
+                        </p>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: {{ campaign.progress_percentage }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">{{ "{:,.0f}".format(campaign.current_amount) }} VND raised</small>
+                            <small class="text-muted">{{ campaign.progress_percentage }}% of {{ "{:,.0f}".format(campaign.target_amount) }} VND</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-success">
+                                <i class="fas fa-users"></i> {{ campaign.donor_count }} donors
+                            </small>
+                            <a href="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}" class="btn btn-primary btn-sm">Donate</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No campaigns found</h4>
+                <p class="text-muted">Check back later for new fundraising campaigns.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Load More Button -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <button class="btn btn-outline-primary" id="loadMoreBtn">
+                <i class="fas fa-plus"></i> Load More Campaigns
+            </button>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">How Fundraising Works</h3>
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <span class="fw-bold fs-4">1</span>
+                            </div>
+                            <h5>Create Campaign</h5>
+                            <p class="text-muted">Start a fundraising campaign for your medical cause</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <span class="fw-bold fs-4">2</span>
+                            </div>
+                            <h5>Share Story</h5>
+                            <p class="text-muted">Tell your story and share with friends and family</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <span class="fw-bold fs-4">3</span>
+                            </div>
+                            <h5>Receive Donations</h5>
+                            <p class="text-muted">Collect donations from supporters worldwide</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <span class="fw-bold fs-4">4</span>
+                            </div>
+                            <h5>Get Treatment</h5>
+                            <p class="text-muted">Use funds for medical treatment and recovery</p>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="#" class="btn btn-success btn-lg">
+                            <i class="fas fa-plus"></i> Start Your Campaign Today
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Start Campaign Button -->
+    <div class="d-md-none">
+        <a href="#" class="btn btn-success btn-lg rounded-circle position-fixed" 
+           style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1000;">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px);
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load more functionality
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-plus"></i> Load More Campaigns';
+                // In a real implementation, you would fetch more data from the API
+            }, 1000);
+        });
+    }
+
+    // Animate progress bars on scroll
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const progressBar = entry.target.querySelector('.progress-bar');
+                if (progressBar) {
+                    const width = progressBar.style.width;
+                    progressBar.style.width = '0%';
+                    setTimeout(() => {
+                        progressBar.style.width = width;
+                    }, 100);
+                }
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all progress containers
+    document.querySelectorAll('.progress').forEach(progress => {
+        observer.observe(progress.closest('.card'));
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}VietQR Payment - Ytili{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.qr-container {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.qr-code {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    background: white;
+}
+
+.payment-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.amount-display {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.timer-display {
+    background: rgba(255,255,255,0.2);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.bank-info {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-success {
+    background: #d1edff;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-expired {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.mobile-instructions {
+    background: #f8f9fa;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.instruction-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.step-number {
+    background: var(--primary-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.copy-button {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.copy-button:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.copy-button:active {
+    transform: scale(0.95);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mobile-container py-3">
+    <div class="payment-container">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary mb-2">
+                <i class="fas fa-qrcode"></i> VietQR Payment
+            </h2>
+            <p class="text-muted mobile-text-sm">Scan QR code to complete your donation</p>
+        </div>
+
+        <!-- Payment Status -->
+        <div id="paymentStatus" class="status-indicator status-pending">
+            <i class="fas fa-clock pulse"></i>
+            <span>Waiting for payment...</span>
+        </div>
+
+        <!-- Timer -->
+        <div class="payment-info">
+            <div class="timer-display">
+                <i class="fas fa-hourglass-half"></i>
+                <span>Expires in: </span>
+                <span id="countdown" class="fw-bold">30:00</span>
+            </div>
+            
+            <div class="amount-display">
+                <span id="paymentAmount">{{ amount | default('0') }}</span> VND
+            </div>
+            
+            <div class="text-center">
+                <small>{{ description | default('Ytili Donation') }}</small>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qr-container">
+            <div id="qrCodeContainer">
+                <div class="qr-code d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x text-muted mb-2"></i>
+                        <div class="text-muted">Generating QR code...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <button id="refreshQR" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-refresh"></i> Refresh QR Code
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Instructions -->
+        <div class="mobile-instructions">
+            <h6 class="fw-bold mb-3">
+                <i class="fas fa-mobile-alt"></i> How to pay:
+            </h6>
+            
+            <div class="instruction-step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Open your banking app</strong><br>
+                    <small class="text-muted">Use any Vietnamese banking app that supports QR payments</small>
+                </div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Scan the QR code</strong><br>
+                    <small class="text-muted">Point your camera at the QR code above</small>
+                </div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Confirm payment</strong><br>
+                    <small class="text-muted">Check the amount and complete the transaction</small>
+                </div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">4</div>
+                <div>
+                    <strong>Wait for confirmation</strong><br>
+                    <small class="text-muted">Your donation will be processed automatically</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Information -->
+        <div class="bank-info">
+            <h6 class="fw-bold mb-3">
+                <i class="fas fa-university"></i> Bank Details:
+            </h6>
+            
+            <div class="row g-2 mobile-text-sm">
+                <div class="col-4"><strong>Bank:</strong></div>
+                <div class="col-8" id="bankName">Vietinbank</div>
+                
+                <div class="col-4"><strong>Account:</strong></div>
+                <div class="col-8">
+                    <span id="accountNumber">113366668888</span>
+                    <button class="copy-button ms-2" onclick="copyToClipboard('accountNumber')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                
+                <div class="col-4"><strong>Name:</strong></div>
+                <div class="col-8" id="accountName">YTILI PLATFORM</div>
+                
+                <div class="col-4"><strong>Amount:</strong></div>
+                <div class="col-8">
+                    <span id="transferAmount">{{ amount | default('0') }}</span> VND
+                    <button class="copy-button ms-2" onclick="copyToClipboard('transferAmount')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                
+                <div class="col-4"><strong>Content:</strong></div>
+                <div class="col-8">
+                    <span id="transferContent">{{ payment_reference | default('YTILI_DONATION') }}</span>
+                    <button class="copy-button ms-2" onclick="copyToClipboard('transferContent')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-grid gap-2">
+            <button id="checkPaymentBtn" class="btn btn-success btn-lg w-100">
+                <i class="fas fa-check-circle"></i> Check Payment Status
+            </button>
+            
+            <button id="cancelPaymentBtn" class="btn btn-outline-danger w-100">
+                <i class="fas fa-times"></i> Cancel Payment
+            </button>
+        </div>
+
+        <!-- Help Section -->
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                Need help? <a href="#" class="text-decoration-none">Contact Support</a>
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class MobileVietQRPayment {
+    constructor() {
+        this.paymentData = null;
+        this.countdownTimer = null;
+        this.statusCheckInterval = null;
+        this.expiresAt = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.createPayment();
+    }
+    
+    bindEvents() {
+        document.getElementById('refreshQR').addEventListener('click', () => {
+            this.createPayment();
+        });
+        
+        document.getElementById('checkPaymentBtn').addEventListener('click', () => {
+            this.checkPaymentStatus();
+        });
+        
+        document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
+            this.cancelPayment();
+        });
+    }
+    
+    async createPayment() {
+        try {
+            this.showLoading();
+            
+            const response = await fetch('/api/vietqr-payments/create-qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    donation_id: '{{ donation_id }}',
+                    amount: {{ amount | default(0) }},
+                    description: '{{ description | default("Ytili Donation") }}',
+                    expires_in_minutes: 30
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to create payment');
+            }
+            
+            const result = await response.json();
+            this.paymentData = result.data;
+            this.displayPayment();
+            this.startCountdown();
+            this.startStatusCheck();
+            
+        } catch (error) {
+            this.showError(error.message);
+        }
+    }
+    
+    displayPayment() {
+        // Update QR code
+        const qrContainer = document.getElementById('qrCodeContainer');
+        qrContainer.innerHTML = `
+            <img src="${this.paymentData.qr_data_url}" 
+                 alt="VietQR Code" 
+                 class="qr-code"
+                 style="width: 100%; height: auto; max-width: 250px;">
+        `;
+        
+        // Update bank info
+        document.getElementById('bankName').textContent = this.paymentData.bank_info.bank_name || 'Vietinbank';
+        document.getElementById('accountNumber').textContent = this.paymentData.bank_info.account_number;
+        document.getElementById('accountName').textContent = this.paymentData.bank_info.account_name;
+        document.getElementById('transferAmount').textContent = this.paymentData.amount;
+        document.getElementById('transferContent').textContent = this.paymentData.payment_reference;
+        
+        // Set expiry time
+        this.expiresAt = new Date(this.paymentData.expires_at);
+    }
+    
+    startCountdown() {
+        if (this.countdownTimer) {
+            clearInterval(this.countdownTimer);
+        }
+        
+        this.countdownTimer = setInterval(() => {
+            const now = new Date();
+            const timeLeft = this.expiresAt - now;
+            
+            if (timeLeft <= 0) {
+                this.handleExpired();
+                return;
+            }
+            
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+            
+            document.getElementById('countdown').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+    
+    startStatusCheck() {
+        if (this.statusCheckInterval) {
+            clearInterval(this.statusCheckInterval);
+        }
+
+        // Use WebSocket for real-time updates if available
+        if (window.ytiliWS && window.ytiliWS.isConnected) {
+            // Request real-time payment status updates
+            window.ytiliWS.requestPaymentStatus(this.paymentData.payment_reference);
+
+            // Listen for payment updates
+            window.ytiliWS.on('payment_update', (data) => {
+                if (data.payment_reference === this.paymentData.payment_reference) {
+                    if (data.status === 'paid') {
+                        this.handleSuccess();
+                    } else if (data.status === 'expired') {
+                        this.handleExpired();
+                    }
+                }
+            });
+        } else {
+            // Fallback to polling
+            this.statusCheckInterval = setInterval(() => {
+                this.checkPaymentStatus();
+            }, 10000); // Check every 10 seconds
+        }
+    }
+    
+    async checkPaymentStatus() {
+        try {
+            const response = await fetch(`/api/vietqr-payments/status/${this.paymentData.payment_reference}`);
+            
+            if (!response.ok) {
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (result.data.status === 'paid') {
+                this.handleSuccess();
+            } else if (result.data.status === 'expired') {
+                this.handleExpired();
+            }
+            
+        } catch (error) {
+            console.error('Status check failed:', error);
+        }
+    }
+    
+    handleSuccess() {
+        clearInterval(this.countdownTimer);
+        clearInterval(this.statusCheckInterval);
+        
+        const statusEl = document.getElementById('paymentStatus');
+        statusEl.className = 'status-indicator status-success';
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i><span>Payment successful!</span>';
+        
+        // Redirect after 3 seconds
+        setTimeout(() => {
+            window.location.href = '/donations/success';
+        }, 3000);
+    }
+    
+    handleExpired() {
+        clearInterval(this.countdownTimer);
+        clearInterval(this.statusCheckInterval);
+        
+        const statusEl = document.getElementById('paymentStatus');
+        statusEl.className = 'status-indicator status-expired';
+        statusEl.innerHTML = '<i class="fas fa-times-circle"></i><span>Payment expired</span>';
+        
+        document.getElementById('countdown').textContent = '00:00';
+    }
+    
+    cancelPayment() {
+        if (confirm('Are you sure you want to cancel this payment?')) {
+            clearInterval(this.countdownTimer);
+            clearInterval(this.statusCheckInterval);
+            window.location.href = '/donations/';
+        }
+    }
+    
+    showLoading() {
+        const qrContainer = document.getElementById('qrCodeContainer');
+        qrContainer.innerHTML = `
+            <div class="qr-code d-flex align-items-center justify-content-center">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted mb-2"></i>
+                    <div class="text-muted">Generating QR code...</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    showError(message) {
+        const statusEl = document.getElementById('paymentStatus');
+        statusEl.className = 'status-indicator status-expired';
+        statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Error: ${message}</span>`;
+    }
+}
+
+// Copy to clipboard function
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopyFeedback(element);
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showCopyFeedback(element);
+    }
+}
+
+function showCopyFeedback(element) {
+    const originalText = element.textContent;
+    element.textContent = 'Copied!';
+    element.style.color = '#28a745';
+    
+    setTimeout(() => {
+        element.textContent = originalText;
+        element.style.color = '';
+    }, 1500);
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new MobileVietQRPayment();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+
+{% block title %}Live Donation Tracking - Ytili{% endblock %}
+
+{% block extra_css %}
+<style>
+.tracking-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.donation-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.donation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.donation-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+}
+
+.donation-body {
+    padding: 1.5rem;
+}
+
+.status-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.timeline-item.completed .timeline-icon {
+    border-color: var(--success-color);
+    background: var(--success-color);
+    color: white;
+}
+
+.timeline-item.active .timeline-icon {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.timeline-item.pending .timeline-icon {
+    border-color: #e9ecef;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.timeline-item:not(:last-child) .timeline-icon::after {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 40px;
+    background: #e9ecef;
+    z-index: -1;
+}
+
+.timeline-item.completed:not(:last-child) .timeline-icon::after {
+    background: var(--success-color);
+}
+
+.timeline-content {
+    flex: 1;
+    padding-top: 0.5rem;
+}
+
+.timeline-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-description {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-timestamp {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #d4edda;
+    color: #155724;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #28a745;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.donation-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.refresh-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.refresh-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.refresh-button.spinning {
+    animation: spin 1s linear infinite;
+}
+
+.filter-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 0.25rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+}
+
+.filter-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-size: 0.875rem;
+}
+
+.filter-tab.active {
+    background: white;
+    color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+@media (max-width: 767px) {
+    .tracking-container {
+        padding: 0 1rem;
+    }
+    
+    .donation-header,
+    .donation-body {
+        padding: 1rem;
+    }
+    
+    .status-timeline {
+        padding-left: 1.5rem;
+    }
+    
+    .timeline-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .timeline-item:not(:last-child) .timeline-icon::after {
+        top: 32px;
+        height: 32px;
+    }
+    
+    .donation-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .refresh-button {
+        bottom: 80px;
+        width: 48px;
+        height: 48px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mobile-container py-4">
+    <div class="tracking-container">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary mb-2">
+                <i class="fas fa-satellite-dish"></i> Live Donation Tracking
+            </h2>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>Real-time Updates</span>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="donation-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalDonations">{{ stats.total_donations | default(0) }}</div>
+                <div class="stat-label">Total Donations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeDonations">{{ stats.active_donations | default(0) }}</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedDonations">{{ stats.completed_donations | default(0) }}</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalImpact">{{ stats.total_impact | default(0) }}</div>
+                <div class="stat-label">Lives Helped</div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All Donations</button>
+            <button class="filter-tab" data-filter="pending">Pending</button>
+            <button class="filter-tab" data-filter="matched">Matched</button>
+            <button class="filter-tab" data-filter="delivered">Delivered</button>
+            <button class="filter-tab" data-filter="completed">Completed</button>
+        </div>
+
+        <!-- Donations List -->
+        <div id="donationsList">
+            {% if donations %}
+                {% for donation in donations %}
+                <div class="donation-card" data-donation-id="{{ donation.id }}" data-status="{{ donation.status }}">
+                    <div class="donation-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="mb-1">{{ donation.medication_name }}</h5>
+                                <p class="mb-0 opacity-75">Donation #{{ donation.id }}</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="donation-status status-{{ donation.status }}">{{ donation.status }}</div>
+                                <small class="d-block mt-1 opacity-75">{{ donation.created_at | default('Just now') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="donation-body">
+                        <div class="status-timeline">
+                            <div class="timeline-item completed">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Donation Created</div>
+                                    <div class="timeline-description">Your donation has been registered in the system</div>
+                                    <div class="timeline-timestamp">{{ donation.created_at | default('Just now') }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {{ 'completed' if donation.status in ['matched', 'delivered', 'completed'] else 'active' if donation.status == 'pending' else 'pending' }}">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Finding Match</div>
+                                    <div class="timeline-description">AI is matching your donation with hospitals in need</div>
+                                    <div class="timeline-timestamp">{{ donation.matched_at | default('In progress...') }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {{ 'completed' if donation.status in ['delivered', 'completed'] else 'active' if donation.status == 'matched' else 'pending' }}">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-hospital"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Hospital Matched</div>
+                                    <div class="timeline-description">
+                                        {% if donation.hospital_name %}
+                                            Matched with {{ donation.hospital_name }}
+                                        {% else %}
+                                            Waiting for hospital confirmation
+                                        {% endif %}
+                                    </div>
+                                    <div class="timeline-timestamp">{{ donation.matched_at | default('Pending...') }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {{ 'completed' if donation.status == 'completed' else 'active' if donation.status == 'delivered' else 'pending' }}">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Delivery</div>
+                                    <div class="timeline-description">Supplies are being delivered to the hospital</div>
+                                    <div class="timeline-timestamp">{{ donation.delivered_at | default('Pending...') }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {{ 'completed' if donation.status == 'completed' else 'pending' }}">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Impact Created</div>
+                                    <div class="timeline-description">Your donation has helped patients in need</div>
+                                    <div class="timeline-timestamp">{{ donation.completed_at | default('Pending...') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-heart"></i>
+                    <h5>No donations yet</h5>
+                    <p>Start making a difference by creating your first donation!</p>
+                    <a href="{{ url_for('donations.index') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Make a Donation
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Refresh Button -->
+        <button id="refreshButton" class="refresh-button" title="Refresh donations">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class LiveDonationTracker {
+    constructor() {
+        this.currentFilter = 'all';
+        this.donations = [];
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.setupWebSocketListeners();
+        this.loadDonations();
+    }
+    
+    bindEvents() {
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.setActiveFilter(e.target.dataset.filter);
+            });
+        });
+        
+        // Refresh button
+        document.getElementById('refreshButton').addEventListener('click', () => {
+            this.refreshDonations();
+        });
+    }
+    
+    setupWebSocketListeners() {
+        if (window.ytiliWS) {
+            // Listen for donation updates
+            window.ytiliWS.on('donation_update', (data) => {
+                this.handleDonationUpdate(data);
+            });
+            
+            // Listen for donation matching
+            window.ytiliWS.on('donation_matched', (data) => {
+                this.handleDonationMatched(data);
+            });
+            
+            // Subscribe to donation updates room
+            window.ytiliWS.subscribeToRoom('donation_updates');
+        }
+    }
+    
+    async loadDonations() {
+        try {
+            const response = await fetch('/api/donations/live-tracking');
+            if (response.ok) {
+                const data = await response.json();
+                this.donations = data.donations || [];
+                this.updateStats(data.stats || {});
+                this.renderDonations();
+            }
+        } catch (error) {
+            console.error('Failed to load donations:', error);
+        }
+    }
+    
+    async refreshDonations() {
+        const refreshBtn = document.getElementById('refreshButton');
+        refreshBtn.classList.add('spinning');
+        
+        try {
+            await this.loadDonations();
+        } finally {
+            setTimeout(() => {
+                refreshBtn.classList.remove('spinning');
+            }, 1000);
+        }
+    }
+    
+    handleDonationUpdate(data) {
+        const { donation_id, status, details } = data;
+        
+        // Update donation in local data
+        const donation = this.donations.find(d => d.id == donation_id);
+        if (donation) {
+            donation.status = status;
+            Object.assign(donation, details);
+            
+            // Update UI
+            this.updateDonationCard(donation_id, status, details);
+            
+            // Show notification
+            this.showUpdateNotification(donation_id, status);
+        }
+    }
+    
+    handleDonationMatched(data) {
+        const { donation_id, hospital_name } = data;
+        
+        // Update donation in local data
+        const donation = this.donations.find(d => d.id == donation_id);
+        if (donation) {
+            donation.status = 'matched';
+            donation.hospital_name = hospital_name;
+            donation.matched_at = new Date().toISOString();
+            
+            // Update UI
+            this.updateDonationCard(donation_id, 'matched', { hospital_name });
+        }
+    }
+    
+    updateDonationCard(donationId, status, details) {
+        const card = document.querySelector(`[data-donation-id="${donationId}"]`);
+        if (card) {
+            // Update status
+            card.dataset.status = status;
+            
+            // Update status badge
+            const statusBadge = card.querySelector('.donation-status');
+            if (statusBadge) {
+                statusBadge.className = `donation-status status-${status}`;
+                statusBadge.textContent = status;
+            }
+            
+            // Update timeline
+            this.updateTimeline(card, status, details);
+            
+            // Add animation
+            card.style.animation = 'none';
+            card.offsetHeight; // Trigger reflow
+            card.style.animation = 'pulse 0.5s ease-in-out';
+        }
+    }
+    
+    updateTimeline(card, status, details) {
+        const timelineItems = card.querySelectorAll('.timeline-item');
+        
+        timelineItems.forEach((item, index) => {
+            const isCompleted = this.isTimelineStepCompleted(index, status);
+            const isActive = this.isTimelineStepActive(index, status);
+            
+            item.className = `timeline-item ${isCompleted ? 'completed' : isActive ? 'active' : 'pending'}`;
+            
+            // Update timestamps and descriptions
+            if (details && isCompleted) {
+                const timestamp = item.querySelector('.timeline-timestamp');
+                if (timestamp && details.timestamp) {
+                    timestamp.textContent = new Date(details.timestamp).toLocaleString();
+                }
+            }
+        });
+    }
+    
+    isTimelineStepCompleted(stepIndex, status) {
+        const statusOrder = ['pending', 'matched', 'delivered', 'completed'];
+        const currentIndex = statusOrder.indexOf(status);
+        return stepIndex <= currentIndex;
+    }
+    
+    isTimelineStepActive(stepIndex, status) {
+        const statusOrder = ['pending', 'matched', 'delivered', 'completed'];
+        const currentIndex = statusOrder.indexOf(status);
+        return stepIndex === currentIndex + 1;
+    }
+    
+    setActiveFilter(filter) {
+        this.currentFilter = filter;
+        
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === filter);
+        });
+        
+        // Filter donations
+        this.renderDonations();
+    }
+    
+    renderDonations() {
+        const container = document.getElementById('donationsList');
+        const filteredDonations = this.filterDonations(this.donations);
+        
+        if (filteredDonations.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h5>No donations found</h5>
+                    <p>No donations match the current filter.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Show/hide existing cards based on filter
+        document.querySelectorAll('.donation-card').forEach(card => {
+            const status = card.dataset.status;
+            const shouldShow = this.currentFilter === 'all' || status === this.currentFilter;
+            card.style.display = shouldShow ? 'block' : 'none';
+        });
+    }
+    
+    filterDonations(donations) {
+        if (this.currentFilter === 'all') {
+            return donations;
+        }
+        return donations.filter(donation => donation.status === this.currentFilter);
+    }
+    
+    updateStats(stats) {
+        document.getElementById('totalDonations').textContent = stats.total_donations || 0;
+        document.getElementById('activeDonations').textContent = stats.active_donations || 0;
+        document.getElementById('completedDonations').textContent = stats.completed_donations || 0;
+        document.getElementById('totalImpact').textContent = stats.total_impact || 0;
+    }
+    
+    showUpdateNotification(donationId, status) {
+        if (window.ytiliWS) {
+            // Notification will be handled by WebSocket client
+            return;
+        }
+        
+        // Fallback notification
+        const message = `Donation #${donationId} status updated to: ${status}`;
+        this.showToast(message, 'info');
+    }
+    
+    showToast(message, type = 'info') {
+        // Simple toast implementation
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new LiveDonationTracker();
+});
+</script>
+{% endblock %}

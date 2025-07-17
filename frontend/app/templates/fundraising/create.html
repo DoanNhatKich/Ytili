@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Create Campaign - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('fundraising.index') }}">Fundraising</a></li>
+                    <li class="breadcrumb-item active">Create Campaign</li>
+                </ol>
+            </nav>
+            
+            <h1 class="fw-bold text-primary mb-2">
+                <i class="fas fa-plus-circle"></i> Create Fundraising Campaign
+            </h1>
+            <p class="text-muted">Start a campaign to raise funds for medical causes and help save lives</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit"></i> Campaign Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Title -->
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label fw-bold") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Enter a compelling campaign title") }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-3">
+                            {{ form.category.label(class="form-label fw-bold") }}
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label fw-bold") }}
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="4", placeholder="Describe your campaign and why it's important") }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Target Amount and End Date -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.target_amount.label(class="form-label fw-bold") }}
+                                <div class="input-group">
+                                    {{ form.target_amount(class="form-control" + (" is-invalid" if form.target_amount.errors else ""), placeholder="1000000", type="number", step="1", min="100000", max="1000000000") }}
+                                    <span class="input-group-text">VND</span>
+                                </div>
+                                {% if form.target_amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.target_amount.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i>
+                                        Enter amount between 100,000 and 1,000,000,000 VND
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.end_date.label(class="form-label fw-bold") }}
+                                {{ form.end_date(class="form-control" + (" is-invalid" if form.end_date.errors else "")) }}
+                                {% if form.end_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.end_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Beneficiary Information -->
+                        <div class="mb-3">
+                            {{ form.beneficiary_name.label(class="form-label fw-bold") }}
+                            {{ form.beneficiary_name(class="form-control" + (" is-invalid" if form.beneficiary_name.errors else ""), placeholder="Name of the person or organization benefiting") }}
+                            {% if form.beneficiary_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.beneficiary_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Beneficiary Story -->
+                        <div class="mb-3">
+                            {{ form.beneficiary_story.label(class="form-label fw-bold") }}
+                            {{ form.beneficiary_story(class="form-control" + (" is-invalid" if form.beneficiary_story.errors else ""), rows="5", placeholder="Tell the story of the beneficiary and why they need help") }}
+                            {% if form.beneficiary_story.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.beneficiary_story.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Urgency Level -->
+                        <div class="mb-4">
+                            {{ form.urgency_level.label(class="form-label fw-bold") }}
+                            {{ form.urgency_level(class="form-select" + (" is-invalid" if form.urgency_level.errors else "")) }}
+                            {% if form.urgency_level.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.urgency_level.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Urgent campaigns get priority placement and faster review
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <!-- Guidelines -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb"></i> Campaign Guidelines
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Be specific</strong> about the medical need
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Include documentation</strong> when possible
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Set realistic goals</strong> and timelines
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Tell a compelling story</strong> about the beneficiary
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Keep supporters updated</strong> on progress
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Review Process -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i> Review Process
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline-simple">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6>Campaign Submitted</h6>
+                                <small class="text-muted">Your campaign is submitted for review</small>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6>Under Review</h6>
+                                <small class="text-muted">Our team reviews your campaign (1-3 days)</small>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6>Campaign Live</h6>
+                                <small class="text-muted">Your campaign goes live and accepts donations</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle"></i> Need Help?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        <small class="text-muted">
+                            If you need assistance creating your campaign, our support team is here to help.
+                        </small>
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-envelope"></i> Contact Support
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-book"></i> Campaign Guide
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline-simple {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-simple::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timeline-content {
+    margin-left: 20px;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to tomorrow
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    if (endDateInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        endDateInput.min = tomorrow.toISOString().split('T')[0];
+    }
+
+    // Simple amount input validation - only allow numbers
+    const amountInput = document.querySelector('input[name="target_amount"]');
+    if (amountInput) {
+        amountInput.addEventListener('input', function(e) {
+            // Only allow numeric characters
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    }
+});
+</script>
+{% endblock %}

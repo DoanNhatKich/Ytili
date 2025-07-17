@@ -1,0 +1,869 @@
+/* Mobile-First Responsive CSS for Ytili Platform */
+
+/* Base Mobile Styles (320px and up) */
+:root {
+    --primary-color: #2c5aa0;
+    --secondary-color: #667eea;
+    --accent-color: #764ba2;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    
+    /* Mobile spacing */
+    --mobile-padding: 1rem;
+    --mobile-margin: 0.75rem;
+    --mobile-border-radius: 0.5rem;
+    
+    /* Touch targets */
+    --touch-target-size: 44px;
+    --touch-spacing: 8px;
+}
+
+/* Mobile-first base styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-size: 16px; /* Prevent zoom on iOS */
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch-friendly navigation */
+.navbar {
+    padding: 0.5rem 1rem;
+    min-height: var(--touch-target-size);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color) !important;
+}
+
+.navbar-toggler {
+    border: none;
+    padding: 0.5rem;
+    min-width: var(--touch-target-size);
+    min-height: var(--touch-target-size);
+}
+
+.navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    min-height: var(--touch-target-size);
+    display: flex;
+    align-items: center;
+}
+
+/* Mobile hero section */
+.hero-section {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.hero-section h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.hero-section .lead {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Touch-friendly buttons */
+.btn {
+    min-height: var(--touch-target-size);
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: var(--mobile-border-radius);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-lg {
+    min-height: 52px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-sm {
+    min-height: 36px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Mobile button groups */
+.btn-group-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--touch-spacing);
+    width: 100%;
+}
+
+.btn-group-mobile .btn {
+    width: 100%;
+    margin-bottom: var(--touch-spacing);
+}
+
+/* Mobile cards */
+.card {
+    border-radius: var(--mobile-border-radius);
+    border: 1px solid #dee2e6;
+    margin-bottom: var(--mobile-margin);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.feature-card:hover,
+.feature-card:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-body {
+    padding: var(--mobile-padding);
+}
+
+/* Mobile forms */
+.form-control {
+    min-height: var(--touch-target-size);
+    font-size: 16px; /* Prevent zoom on iOS */
+    border-radius: var(--mobile-border-radius);
+    border: 2px solid #ced4da;
+    padding: 0.75rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+}
+
+/* Mobile spacing utilities */
+.mobile-spacing {
+    padding: var(--mobile-padding);
+    margin: var(--mobile-margin) 0;
+}
+
+.mobile-container {
+    padding-left: var(--mobile-padding);
+    padding-right: var(--mobile-padding);
+}
+
+/* Mobile stats section */
+.stats-section {
+    padding: 2rem 0;
+    background-color: var(--light-color);
+}
+
+.stats-section .card {
+    background: transparent;
+    border: none;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.stats-section .card-body {
+    padding: 1rem;
+}
+
+.stats-section i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-section h3 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Mobile footer */
+.footer {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+
+.footer h5, .footer h6 {
+    margin-bottom: 1rem;
+}
+
+.footer .list-unstyled li {
+    margin-bottom: 0.5rem;
+}
+
+.footer .text-light {
+    color: rgba(255,255,255,0.8) !important;
+    text-decoration: none;
+}
+
+.footer .text-light:hover {
+    color: white !important;
+}
+
+/* Mobile alerts */
+.alert {
+    border-radius: var(--mobile-border-radius);
+    padding: 1rem;
+    margin-bottom: var(--mobile-margin);
+    border: none;
+    font-size: 0.95rem;
+}
+
+/* Mobile dropdown */
+.dropdown-menu {
+    border-radius: var(--mobile-border-radius);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    min-width: 200px;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    min-height: var(--touch-target-size);
+    display: flex;
+    align-items: center;
+}
+
+/* Mobile emergency section */
+.emergency-section {
+    padding: 2rem 0;
+    background: linear-gradient(45deg, #fff5f5, #ffe6e6);
+}
+
+.emergency-section h2 {
+    color: var(--danger-color);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.emergency-section .btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    font-weight: 600;
+}
+
+/* Mobile utility classes */
+.mobile-hidden {
+    display: none;
+}
+
+.mobile-only {
+    display: block;
+}
+
+.text-mobile-center {
+    text-align: center;
+}
+
+.w-mobile-100 {
+    width: 100% !important;
+}
+
+/* Mobile accessibility */
+.sr-only-mobile {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus styles for accessibility */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile Form Enhancements */
+.mobile-form {
+    width: 100%;
+}
+
+.input-group {
+    margin-bottom: 0.5rem;
+}
+
+.input-group-text {
+    background-color: var(--light-color);
+    border-color: #ced4da;
+    color: var(--primary-color);
+    min-width: var(--touch-target-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-group .form-control {
+    border-left: none;
+}
+
+.input-group .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: none;
+}
+
+.input-group .form-control:focus + .input-group-text,
+.input-group .input-group-text + .form-control:focus {
+    border-color: var(--primary-color);
+}
+
+/* Mobile Select Styling */
+.form-select {
+    min-height: var(--touch-target-size);
+    font-size: 16px;
+    border-radius: var(--mobile-border-radius);
+    border: 2px solid #ced4da;
+    padding: 0.75rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+}
+
+/* Mobile Button Link Styling */
+.btn-link-mobile {
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 0.5rem;
+    border-radius: var(--mobile-border-radius);
+    transition: all 0.3s ease;
+    display: inline-block;
+    min-height: var(--touch-target-size);
+    line-height: 1.5;
+    text-align: center;
+}
+
+.btn-link-mobile:hover,
+.btn-link-mobile:focus {
+    color: var(--accent-color);
+    background-color: rgba(44, 90, 160, 0.1);
+    text-decoration: none;
+}
+
+/* Mobile Password Toggle Button */
+.input-group .btn {
+    min-height: var(--touch-target-size);
+    border-left: none;
+    border-color: #ced4da;
+}
+
+.input-group .btn:focus {
+    border-color: var(--primary-color);
+    box-shadow: none;
+}
+
+/* Mobile Form Validation */
+.invalid-feedback.d-block {
+    display: block !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    color: var(--danger-color);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--danger-color);
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Mobile Form Success States */
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: var(--success-color);
+}
+
+.form-control.is-valid:focus,
+.form-select.is-valid:focus {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Mobile Form Groups */
+.mobile-form .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.mobile-form .row > [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Mobile Form Spacing */
+.mobile-form .mb-3 {
+    margin-bottom: 1.5rem;
+}
+
+/* Mobile Checkbox and Radio */
+.form-check {
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+}
+
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: -2rem;
+    margin-top: 0.125rem;
+}
+
+.form-check-label {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Mobile Form Animation */
+.mobile-form .form-control,
+.mobile-form .form-select {
+    transition: all 0.3s ease;
+}
+
+.mobile-form .form-control:focus,
+.mobile-form .form-select:focus {
+    transform: translateY(-1px);
+}
+
+/* Mobile Form Loading State */
+.mobile-form.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.mobile-form.loading .form-control,
+.mobile-form.loading .form-select,
+.mobile-form.loading .btn {
+    cursor: not-allowed;
+}
+
+/* Mobile Autocomplete Styling */
+.form-control[autocomplete] {
+    background-color: #fff;
+}
+
+.form-control[autocomplete]:focus {
+    background-color: #fff;
+}
+
+/* Mobile Input Mode Optimizations */
+.form-control[inputmode="email"] {
+    text-transform: lowercase;
+}
+
+.form-control[inputmode="tel"] {
+    direction: ltr;
+}
+
+.form-control[inputmode="numeric"] {
+    text-align: right;
+}
+
+/* Real-time Notifications */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    width: 100%;
+}
+
+.notification {
+    background: white;
+    border-radius: var(--mobile-border-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 10px;
+    border-left: 4px solid #007bff;
+    overflow: hidden;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification-success {
+    border-left-color: var(--success-color);
+}
+
+.notification-error {
+    border-left-color: var(--danger-color);
+}
+
+.notification-warning {
+    border-left-color: var(--warning-color);
+}
+
+.notification-info {
+    border-left-color: var(--info-color);
+}
+
+.notification-content {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notification-content i {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.notification-success .notification-content i {
+    color: var(--success-color);
+}
+
+.notification-error .notification-content i {
+    color: var(--danger-color);
+}
+
+.notification-warning .notification-content i {
+    color: var(--warning-color);
+}
+
+.notification-info .notification-content i {
+    color: var(--info-color);
+}
+
+.notification-content span {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.notification-close:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+/* Emergency Modal */
+.emergency-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.emergency-modal .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 0;
+    border-radius: var(--mobile-border-radius);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    animation: slideInUp 0.3s ease-out;
+}
+
+.emergency-modal .modal-header {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--mobile-border-radius) var(--mobile-border-radius) 0 0;
+}
+
+.emergency-modal .modal-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.emergency-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.emergency-modal .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    text-align: right;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--mobile-border-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-success {
+    background: #d1edff;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-expired {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-processing {
+    background: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+
+/* Donation Status */
+.donation-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.donation-status.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.donation-status.status-matched {
+    background: #d4edda;
+    color: #155724;
+}
+
+.donation-status.status-delivered {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.donation-status.status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Payment Status */
+.payment-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment-status.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.payment-status.status-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.payment-status.status-expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.payment-status.status-cancelled {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Animation Classes */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+/* Mobile Responsive Notifications */
+@media (max-width: 767px) {
+    .notification-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+
+    .notification-content {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .notification-content i {
+        font-size: 1rem;
+    }
+
+    .emergency-modal .modal-content {
+        margin: 10% auto;
+        width: 95%;
+    }
+
+    .emergency-modal .modal-header,
+    .emergency-modal .modal-body,
+    .emergency-modal .modal-footer {
+        padding: 1rem;
+    }
+}
+
+/* Connection Status Indicator */
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: white;
+    border-radius: 2rem;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    font-size: 0.75rem;
+    z-index: 1000;
+    display: none;
+}
+
+.connection-status.connected {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.connection-status.disconnected {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+    display: block;
+}
+
+.connection-status.reconnecting {
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+    display: block;
+}
+
+.connection-status i {
+    margin-right: 0.5rem;
+}

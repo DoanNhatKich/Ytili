@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Transparency Dashboard - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">Transparency Dashboard</h1>
+        <p class="lead text-muted">Real-time transparency for all donations on the Ytili platform</p>
+    </div>
+    
+    <!-- Platform Integrity Score -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body text-center p-5">
+                    <h3 class="card-title mb-4">Platform Integrity Score</h3>
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="position-relative d-inline-block">
+                                <svg width="200" height="200" class="position-relative">
+                                    <circle cx="100" cy="100" r="80" fill="none" stroke="#e9ecef" stroke-width="20"/>
+                                    <circle cx="100" cy="100" r="80" fill="none" stroke="#28a745" stroke-width="20"
+                                            stroke-dasharray="{{ (transparency_data.platform_integrity / 100) * 502.4 }} 502.4"
+                                            stroke-linecap="round" transform="rotate(-90 100 100)"/>
+                                </svg>
+                                <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                    <h2 class="fw-bold text-success mb-0">{{ "%.1f"|format(transparency_data.platform_integrity) }}%</h2>
+                                    <small class="text-muted">Integrity</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-start">
+                            <h5>What this means:</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    All transaction chains are verified
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-shield-alt text-primary"></i>
+                                    Blockchain-inspired security
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-eye text-info"></i>
+                                    Full donation transparency
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-users text-warning"></i>
+                                    Community verified
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-body text-center">
+                    <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                    <h3 class="fw-bold">{{ transparency_data.statistics.total_donations or 0 }}</h3>
+                    <p class="text-muted mb-0">Total Donations</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-body text-center">
+                    <i class="fas fa-link fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold">{{ transparency_data.statistics.total_transactions or 0 }}</h3>
+                    <p class="text-muted mb-0">Verified Transactions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                    <h3 class="fw-bold">{{ "%.1f"|format(transparency_data.statistics.average_transactions_per_donation or 0) }}</h3>
+                    <p class="text-muted mb-0">Avg Transactions/Donation</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow border-0">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-double fa-3x text-info mb-3"></i>
+                    <h3 class="fw-bold">{{ transparency_data.statistics.donations_by_status.get('completed', 0) if transparency_data.statistics.donations_by_status else 0 }}</h3>
+                    <p class="text-muted mb-0">Completed Donations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Donation Types Chart -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Donations by Type</h5>
+                </div>
+                <div class="card-body">
+                    {% if transparency_data.statistics.donations_by_type %}
+                        {% for type, count in transparency_data.statistics.donations_by_type.items() %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-capitalize">{{ type.replace('_', ' ') }}</span>
+                                    <span class="fw-bold">{{ count }}</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar 
+                                        {% if type == 'medication' %}bg-primary
+                                        {% elif type == 'medical_supply' %}bg-info
+                                        {% elif type == 'food' %}bg-success
+                                        {% elif type == 'cash' %}bg-warning
+                                        {% endif %}"
+                                         style="width: {{ (count / transparency_data.statistics.total_donations * 100) if transparency_data.statistics.total_donations > 0 else 0 }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No donation data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Donations by Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if transparency_data.statistics.donations_by_status %}
+                        {% for status, count in transparency_data.statistics.donations_by_status.items() %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-capitalize">{{ status.replace('_', ' ') }}</span>
+                                    <span class="fw-bold">{{ count }}</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar 
+                                        {% if status == 'completed' %}bg-success
+                                        {% elif status == 'verified' %}bg-info
+                                        {% elif status == 'matched' %}bg-primary
+                                        {% elif status == 'pending' %}bg-secondary
+                                        {% elif status == 'cancelled' %}bg-danger
+                                        {% endif %}"
+                                         style="width: {{ (count / transparency_data.statistics.total_donations * 100) if transparency_data.statistics.total_donations > 0 else 0 }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No status data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Donations -->
+    <div class="card shadow border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Donations</h5>
+            <small class="text-muted">Real-time transparency tracking</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Donation ID</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Transactions</th>
+                        <th>Transparency Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in transparency_data.donations %}
+                        <tr>
+                            <td><code>#{{ donation.donation_id }}</code></td>
+                            <td>{{ donation.title }}</td>
+                            <td>
+                                {% if donation.type == 'medication' %}
+                                    <span class="badge bg-primary">Medication</span>
+                                {% elif donation.type == 'medical_supply' %}
+                                    <span class="badge bg-info">Medical Supply</span>
+                                {% elif donation.type == 'food' %}
+                                    <span class="badge bg-success">Food</span>
+                                {% elif donation.type == 'cash' %}
+                                    <span class="badge bg-warning">Cash</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donation.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif donation.status == 'verified' %}
+                                    <span class="badge bg-info">Verified</span>
+                                {% elif donation.status == 'matched' %}
+                                    <span class="badge bg-primary">Matched</span>
+                                {% elif donation.status == 'pending' %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ donation.created_date }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ donation.transaction_count }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress me-2" style="width: 60px; height: 8px;">
+                                        <div class="progress-bar 
+                                            {% if donation.transparency_score >= 80 %}bg-success
+                                            {% elif donation.transparency_score >= 60 %}bg-warning
+                                            {% else %}bg-danger
+                                            {% endif %}"
+                                             style="width: {{ donation.transparency_score }}%">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.0f"|format(donation.transparency_score) }}%</small>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('transparency.donation_detail', donation_id=donation.donation_id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-search"></i> View Chain
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not transparency_data.donations %}
+            <div class="card-body text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h5>No donations to display</h5>
+                <p class="text-muted">Donations will appear here as they are created on the platform.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

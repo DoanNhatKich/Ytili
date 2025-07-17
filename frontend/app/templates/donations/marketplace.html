@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}Marketplace - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-store"></i> Medical Marketplace
+                    </h1>
+                    <p class="text-muted">Discover and donate medical supplies to those in need</p>
+                </div>
+                <div class="d-none d-md-block">
+                    <a href="{{ url_for('donations.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Donation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       placeholder="Search medications..." value="{{ request.args.get('search', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                <option value="medication" {{ 'selected' if request.args.get('category') == 'medication' }}>Medications</option>
+                                <option value="medical_device" {{ 'selected' if request.args.get('category') == 'medical_device' }}>Medical Devices</option>
+                                <option value="supplies" {{ 'selected' if request.args.get('category') == 'supplies' }}>Medical Supplies</option>
+                                <option value="emergency" {{ 'selected' if request.args.get('category') == 'emergency' }}>Emergency Items</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="location" class="form-label">Location</label>
+                            <select class="form-select" id="location" name="location">
+                                <option value="">All Locations</option>
+                                <option value="hanoi" {{ 'selected' if request.args.get('location') == 'hanoi' }}>Hanoi</option>
+                                <option value="hcmc" {{ 'selected' if request.args.get('location') == 'hcmc' }}>Ho Chi Minh City</option>
+                                <option value="danang" {{ 'selected' if request.args.get('location') == 'danang' }}>Da Nang</option>
+                                <option value="other" {{ 'selected' if request.args.get('location') == 'other' }}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Donations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="fw-bold mb-3">
+                <i class="fas fa-star text-warning"></i> Featured Donations
+            </h3>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-warning text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark">URGENT</span>
+                        <small><i class="fas fa-clock"></i> 2 hours ago</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Emergency Insulin Supply</h5>
+                    <p class="card-text text-muted">
+                        Urgent need for insulin for diabetic patients at Children's Hospital.
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> Hanoi, Vietnam
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success">Verified</span>
+                        <a href="#" class="btn btn-primary btn-sm">
+                            <i class="fas fa-hand-holding-heart"></i> Donate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark">HIGH PRIORITY</span>
+                        <small><i class="fas fa-clock"></i> 5 hours ago</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Surgical Masks & Gloves</h5>
+                    <p class="card-text text-muted">
+                        Medical protective equipment needed for rural clinic operations.
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> Da Nang, Vietnam
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success">Verified</span>
+                        <a href="#" class="btn btn-primary btn-sm">
+                            <i class="fas fa-hand-holding-heart"></i> Donate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark">ONGOING</span>
+                        <small><i class="fas fa-clock"></i> 1 day ago</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Blood Pressure Monitors</h5>
+                    <p class="card-text text-muted">
+                        Digital blood pressure monitors for elderly care facility.
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> Ho Chi Minh City, Vietnam
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success">Verified</span>
+                        <a href="#" class="btn btn-primary btn-sm">
+                            <i class="fas fa-hand-holding-heart"></i> Donate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Donations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold">
+                    <i class="fas fa-list"></i> All Donations
+                </h3>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-sort"></i> Sort by
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?sort=newest">Newest First</a></li>
+                        <li><a class="dropdown-item" href="?sort=urgent">Most Urgent</a></li>
+                        <li><a class="dropdown-item" href="?sort=location">By Location</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Grid -->
+    <div class="row" id="donationGrid">
+        <!-- Sample donation items -->
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Paracetamol Tablets</h6>
+                        <span class="badge bg-success">Available</span>
+                    </div>
+                    <p class="card-text text-muted small">
+                        500mg tablets, 100 count. Expires: Dec 2025
+                    </p>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> Hanoi
+                            <span class="ms-2">
+                                <i class="fas fa-clock"></i> 3 hours ago
+                            </span>
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <i class="fas fa-shield-alt"></i> Verified Donor
+                        </small>
+                        <a href="#" class="btn btn-primary btn-sm">Donate</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Digital Thermometer</h6>
+                        <span class="badge bg-warning">Urgent</span>
+                    </div>
+                    <p class="card-text text-muted small">
+                        Non-contact infrared thermometer, brand new
+                    </p>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> Da Nang
+                            <span class="ms-2">
+                                <i class="fas fa-clock"></i> 1 hour ago
+                            </span>
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <i class="fas fa-shield-alt"></i> Verified Donor
+                        </small>
+                        <a href="#" class="btn btn-primary btn-sm">Donate</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Surgical Gloves</h6>
+                        <span class="badge bg-info">High Priority</span>
+                    </div>
+                    <p class="card-text text-muted small">
+                        Latex-free surgical gloves, size M, 100 pairs
+                    </p>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> Ho Chi Minh City
+                            <span class="ms-2">
+                                <i class="fas fa-clock"></i> 6 hours ago
+                            </span>
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <i class="fas fa-shield-alt"></i> Verified Donor
+                        </small>
+                        <a href="#" class="btn btn-primary btn-sm">Donate</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load More Button -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <button class="btn btn-outline-primary" id="loadMoreBtn">
+                <i class="fas fa-plus"></i> Load More Donations
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Add Button -->
+    <div class="d-md-none">
+        <a href="{{ url_for('donations.create') }}" class="btn btn-primary btn-lg rounded-circle position-fixed" 
+           style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1000;">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load more functionality
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            // Simulate loading more donations
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-plus"></i> Load More Donations';
+                // In a real implementation, you would fetch more data from the API
+            }, 1000);
+        });
+    }
+
+    // Filter form auto-submit on change
+    const filterSelects = document.querySelectorAll('#category, #location');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+});
+</script>
+{% endblock %}

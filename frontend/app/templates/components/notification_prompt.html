@@ -1,0 +1,486 @@
+<!-- Push Notification Permission Prompt -->
+<div id="notificationPrompt" class="notification-prompt" style="display: none;">
+    <div class="notification-prompt-content">
+        <div class="notification-prompt-header">
+            <div class="notification-prompt-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="notification-prompt-text">
+                <h6 class="mb-1">Stay Updated</h6>
+                <p class="mb-0">Get real-time updates about your donations</p>
+            </div>
+        </div>
+        
+        <div class="notification-prompt-body">
+            <div class="notification-benefits">
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Donation status updates</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Payment confirmations</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Emergency alerts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="notification-prompt-actions">
+            <button id="enableNotifications" class="btn btn-primary btn-sm">
+                <i class="fas fa-bell"></i> Enable Notifications
+            </button>
+            <button id="dismissPrompt" class="btn btn-outline-secondary btn-sm">
+                Maybe Later
+            </button>
+        </div>
+        
+        <button id="closePrompt" class="notification-prompt-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Notification Settings Modal -->
+<div id="notificationSettingsModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog"></i> Notification Settings
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="notification-status mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <strong>Push Notifications</strong><br>
+                            <small class="text-muted">Receive updates even when the app is closed</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="pushNotificationToggle">
+                            <label class="form-check-label" for="pushNotificationToggle"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="notification-types">
+                    <h6 class="mb-3">Notification Types</h6>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="donationUpdates" checked>
+                        <label class="form-check-label" for="donationUpdates">
+                            <strong>Donation Updates</strong><br>
+                            <small class="text-muted">Status changes and matching notifications</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="paymentUpdates" checked>
+                        <label class="form-check-label" for="paymentUpdates">
+                            <strong>Payment Updates</strong><br>
+                            <small class="text-muted">Payment confirmations and status changes</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="emergencyAlerts" checked>
+                        <label class="form-check-label" for="emergencyAlerts">
+                            <strong>Emergency Alerts</strong><br>
+                            <small class="text-muted">Urgent medical supply requests</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="pointsUpdates" checked>
+                        <label class="form-check-label" for="pointsUpdates">
+                            <strong>Points & Rewards</strong><br>
+                            <small class="text-muted">Points earned and reward notifications</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="systemNotifications">
+                        <label class="form-check-label" for="systemNotifications">
+                            <strong>System Updates</strong><br>
+                            <small class="text-muted">Platform updates and announcements</small>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="notification-test mt-4">
+                    <button id="testNotificationBtn" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-test-tube"></i> Send Test Notification
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNotificationSettings">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.notification-prompt {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    max-width: 350px;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    border: 1px solid #e9ecef;
+    z-index: 9998;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.notification-prompt-content {
+    padding: 1.5rem;
+    position: relative;
+}
+
+.notification-prompt-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.notification-prompt-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-prompt-text h6 {
+    color: #2c5aa0;
+    font-weight: 600;
+}
+
+.notification-prompt-text p {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.notification-benefits {
+    margin-bottom: 1rem;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.notification-prompt-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.notification-prompt-actions .btn {
+    flex: 1;
+    font-size: 0.875rem;
+}
+
+.notification-prompt-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.notification-prompt-close:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.notification-status {
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+.notification-types .form-check {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.notification-types .form-check:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-types .form-check-label {
+    cursor: pointer;
+    width: 100%;
+}
+
+@media (max-width: 767px) {
+    .notification-prompt {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .notification-prompt-content {
+        padding: 1rem;
+    }
+    
+    .notification-prompt-actions {
+        flex-direction: column;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+</style>
+
+<script>
+class NotificationPromptManager {
+    constructor() {
+        this.promptShown = localStorage.getItem('ytili_notification_prompt_shown') === 'true';
+        this.promptDismissed = localStorage.getItem('ytili_notification_prompt_dismissed') === 'true';
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.checkAndShowPrompt();
+        this.loadSettings();
+    }
+    
+    bindEvents() {
+        // Prompt buttons
+        document.getElementById('enableNotifications')?.addEventListener('click', () => {
+            this.enableNotifications();
+        });
+        
+        document.getElementById('dismissPrompt')?.addEventListener('click', () => {
+            this.dismissPrompt();
+        });
+        
+        document.getElementById('closePrompt')?.addEventListener('click', () => {
+            this.hidePrompt();
+        });
+        
+        // Settings modal
+        document.getElementById('pushNotificationToggle')?.addEventListener('change', (e) => {
+            this.togglePushNotifications(e.target.checked);
+        });
+        
+        document.getElementById('testNotificationBtn')?.addEventListener('click', () => {
+            this.sendTestNotification();
+        });
+        
+        document.getElementById('saveNotificationSettings')?.addEventListener('click', () => {
+            this.saveSettings();
+        });
+    }
+    
+    checkAndShowPrompt() {
+        // Don't show if already shown or dismissed
+        if (this.promptShown || this.promptDismissed) {
+            return;
+        }
+        
+        // Don't show if notifications not supported
+        if (!window.pushManager || !window.pushManager.isSupported) {
+            return;
+        }
+        
+        // Don't show if already subscribed
+        if (window.pushManager && window.pushManager.isSubscribed()) {
+            return;
+        }
+        
+        // Show after a delay
+        setTimeout(() => {
+            this.showPrompt();
+        }, 5000);
+    }
+    
+    showPrompt() {
+        const prompt = document.getElementById('notificationPrompt');
+        if (prompt) {
+            prompt.style.display = 'block';
+            this.promptShown = true;
+            localStorage.setItem('ytili_notification_prompt_shown', 'true');
+        }
+    }
+    
+    hidePrompt() {
+        const prompt = document.getElementById('notificationPrompt');
+        if (prompt) {
+            prompt.style.display = 'none';
+        }
+    }
+    
+    dismissPrompt() {
+        this.hidePrompt();
+        this.promptDismissed = true;
+        localStorage.setItem('ytili_notification_prompt_dismissed', 'true');
+    }
+    
+    async enableNotifications() {
+        try {
+            if (window.pushManager) {
+                const success = await window.pushManager.enableNotifications();
+                
+                if (success) {
+                    this.hidePrompt();
+                    localStorage.setItem('ytili_push_enabled', 'true');
+                    
+                    // Show success message
+                    this.showSuccessMessage('Notifications enabled successfully!');
+                } else {
+                    this.showErrorMessage('Failed to enable notifications. Please check your browser settings.');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to enable notifications:', error);
+            this.showErrorMessage('Failed to enable notifications. Please try again.');
+        }
+    }
+    
+    async togglePushNotifications(enabled) {
+        try {
+            if (window.pushManager) {
+                if (enabled) {
+                    await window.pushManager.enableNotifications();
+                    localStorage.setItem('ytili_push_enabled', 'true');
+                } else {
+                    await window.pushManager.disableNotifications();
+                    localStorage.setItem('ytili_push_enabled', 'false');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to toggle notifications:', error);
+        }
+    }
+    
+    async sendTestNotification() {
+        try {
+            if (window.pushManager) {
+                const success = await window.pushManager.testNotification();
+                
+                if (success) {
+                    this.showSuccessMessage('Test notification sent!');
+                } else {
+                    this.showErrorMessage('Failed to send test notification.');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to send test notification:', error);
+            this.showErrorMessage('Failed to send test notification.');
+        }
+    }
+    
+    loadSettings() {
+        // Load notification preferences
+        const pushEnabled = localStorage.getItem('ytili_push_enabled') === 'true';
+        const toggle = document.getElementById('pushNotificationToggle');
+        if (toggle) {
+            toggle.checked = pushEnabled;
+        }
+        
+        // Load notification type preferences
+        const preferences = JSON.parse(localStorage.getItem('ytili_notification_preferences') || '{}');
+        
+        Object.keys(preferences).forEach(key => {
+            const checkbox = document.getElementById(key);
+            if (checkbox) {
+                checkbox.checked = preferences[key];
+            }
+        });
+    }
+    
+    saveSettings() {
+        // Save notification type preferences
+        const preferences = {};
+        const checkboxes = ['donationUpdates', 'paymentUpdates', 'emergencyAlerts', 'pointsUpdates', 'systemNotifications'];
+        
+        checkboxes.forEach(id => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) {
+                preferences[id] = checkbox.checked;
+            }
+        });
+        
+        localStorage.setItem('ytili_notification_preferences', JSON.stringify(preferences));
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('notificationSettingsModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        this.showSuccessMessage('Notification settings saved!');
+    }
+    
+    showSuccessMessage(message) {
+        // Use existing notification system if available
+        if (window.ytiliWS) {
+            window.ytiliWS.showNotification(message, 'success');
+        } else {
+            alert(message);
+        }
+    }
+    
+    showErrorMessage(message) {
+        // Use existing notification system if available
+        if (window.ytiliWS) {
+            window.ytiliWS.showNotification(message, 'error');
+        } else {
+            alert(message);
+        }
+    }
+    
+    // Public API
+    openSettings() {
+        const modal = new bootstrap.Modal(document.getElementById('notificationSettingsModal'));
+        modal.show();
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.notificationPromptManager = new NotificationPromptManager();
+});
+</script>

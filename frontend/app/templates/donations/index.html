@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}My Donations - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">My Donations</h1>
+        <a href="{{ url_for('donations.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Donation
+        </a>
+    </div>
+    
+    {% if donations %}
+        <div class="card shadow mb-5">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Your Donation History</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Recipient</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donations %}
+                            <tr>
+                                <td>{{ donation.title }}</td>
+                                <td>
+                                    {% if donation.donation_type == 'medication' %}
+                                        <span class="badge bg-primary">Medication</span>
+                                    {% elif donation.donation_type == 'medical_supply' %}
+                                        <span class="badge bg-info">Medical Supply</span>
+                                    {% elif donation.donation_type == 'food' %}
+                                        <span class="badge bg-success">Food</span>
+                                    {% elif donation.donation_type == 'cash' %}
+                                        <span class="badge bg-warning">Cash</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if donation.status == 'pending' %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% elif donation.status == 'verified' %}
+                                        <span class="badge bg-info">Verified</span>
+                                    {% elif donation.status == 'matched' %}
+                                        <span class="badge bg-primary">Matched</span>
+                                    {% elif donation.status == 'shipped' %}
+                                        <span class="badge bg-warning">Shipped</span>
+                                    {% elif donation.status == 'delivered' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                    {% elif donation.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif donation.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if donation.recipient_id %}
+                                        <span class="text-success">Assigned</span>
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('donations.detail', donation_id=donation.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="card shadow mb-5">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                <h4>No donations yet</h4>
+                <p class="text-muted">You haven't made any donations yet. Start by creating your first donation.</p>
+                <a href="{{ url_for('donations.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Donation
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    
+    {% if user.user_type == 'hospital' and available_donations %}
+        <h2 class="mb-4">Available Donations</h2>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for donation in available_donations %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ donation.title }}</h5>
+                            
+                            {% if donation.donation_type == 'medication' %}
+                                <span class="badge bg-primary mb-2">Medication</span>
+                            {% elif donation.donation_type == 'medical_supply' %}
+                                <span class="badge bg-info mb-2">Medical Supply</span>
+                            {% elif donation.donation_type == 'food' %}
+                                <span class="badge bg-success mb-2">Food</span>
+                            {% elif donation.donation_type == 'cash' %}
+                                <span class="badge bg-warning mb-2">Cash</span>
+                            {% endif %}
+                            
+                            <p class="card-text">{{ donation.description or 'No description provided' }}</p>
+                            
+                            {% if donation.item_name %}
+                                <p class="mb-1"><strong>Item:</strong> {{ donation.item_name }}</p>
+                            {% endif %}
+                            
+                            {% if donation.quantity and donation.unit %}
+                                <p class="mb-1"><strong>Quantity:</strong> {{ donation.quantity }} {{ donation.unit }}</p>
+                            {% endif %}
+                            
+                            <p class="mb-1"><strong>Donor:</strong> {{ donation.donor.name }}</p>
+                            <p class="mb-1"><strong>Location:</strong> {{ donation.donor.city }}, {{ donation.donor.province }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ donation.created_at.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <div class="d-grid">
+                                <a href="{{ url_for('donations.detail', donation_id=donation.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-info-circle"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

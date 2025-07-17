@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-tachometer-alt"></i> Welcome back, {{ user.full_name or user.email.split('@')[0] }}!
+                    </h1>
+                    <p class="text-muted">Manage your donations and track your impact on the community</p>
+                </div>
+                <div class="d-none d-md-block">
+                    <a href="{{ url_for('donations.create') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> New Donation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Status Alert -->
+    {% if user.status != 'verified' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Account Verification Required</h5>
+                        <p class="mb-2">Your account is not yet verified. Please complete verification to create donations and access all features.</p>
+                        <form method="POST" action="{{ url_for('auth.verify_account') }}" style="display: inline;">
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <i class="fas fa-shield-check"></i> Verify Account
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-heart fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold text-primary">0</h3>
+                    <p class="text-muted mb-0">Total Donations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold text-success">0</h3>
+                    <p class="text-muted mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold text-info">0</h3>
+                    <p class="text-muted mb-0">In Progress</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold text-warning">0</h3>
+                    <p class="text-muted mb-0">People Helped</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Recent Donations -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list text-primary"></i> Recent Donations
+                        </h5>
+                        <a href="{{ url_for('donations.index') }}" class="btn btn-outline-primary btn-sm">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No donations yet</h5>
+                        <p class="text-muted mb-3">Start making a difference by creating your first donation</p>
+                        <a href="{{ url_for('donations.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create First Donation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Profile -->
+        <div class="col-lg-4 mb-4">
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt text-warning"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('donations.create') }}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Create Donation
+                        </a>
+                        <a href="{{ url_for('donations.marketplace') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-store me-2"></i>Browse Marketplace
+                        </a>
+                        <a href="{{ url_for('fundraising.index') }}" class="btn btn-outline-info">
+                            <i class="fas fa-hand-holding-usd me-2"></i>View Campaigns
+                        </a>
+                        <a href="{{ url_for('transparency.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-search me-2"></i>Transparency
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Summary -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user text-info"></i> Profile Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user fa-2x"></i>
+                        </div>
+                        <h6 class="mb-1">{{ user.full_name or 'User' }}</h6>
+                        <small class="text-muted">{{ user.email }}</small>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="fw-bold text-primary">{{ user.user_type.title() if user.user_type else 'Individual' }}</h6>
+                                <small class="text-muted">Account Type</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="fw-bold {% if user.status == 'verified' %}text-success{% else %}text-warning{% endif %}">
+                                {{ user.status.title() if user.status else 'Pending' }}
+                            </h6>
+                            <small class="text-muted">Status</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <a href="{{ url_for('main.profile') }}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock text-info"></i> Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                        <h6 class="text-muted">No recent activity</h6>
+                        <p class="text-muted small">Your donation activities will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Quick Action Button -->
+    <div class="d-md-none">
+        <a href="{{ url_for('donations.create') }}" class="btn btn-success btn-lg rounded-circle position-fixed" 
+           style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1000;">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.alert {
+    border-left: 4px solid #ffc107;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards on load
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Load actual stats (placeholder for future implementation)
+    // In a real implementation, you would fetch these from the API
+    setTimeout(() => {
+        // This would be replaced with actual API calls
+        console.log('Dashboard loaded - ready for real data integration');
+    }, 1000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Create Donation - Ytili{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('donations.index') }}">Donations</a></li>
+                    <li class="breadcrumb-item active">Create Donation</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-plus-circle"></i> Create New Donation
+                    </h1>
+                    <p class="text-muted">Share medical supplies or funds to help those in need</p>
+                </div>
+                <div class="d-none d-md-block">
+                    <a href="{{ url_for('donations.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Donations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heart"></i> Donation Information
+                    </h5>
+                    {% if session.get('user') %}
+                        <small class="text-light">
+                            <i class="fas fa-user"></i> Logged in as: {{ session.get('user', {}).get('email', 'Unknown') }}
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="donationForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Donation Type -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="{{ form.donation_type.id }}" class="form-label fw-bold">
+                                    <i class="fas fa-tag text-primary"></i> {{ form.donation_type.label.text }}
+                                </label>
+                                {{ form.donation_type(class="form-select form-select-lg", id="donationType") }}
+                                {% if form.donation_type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.donation_type.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-secondary mb-3">
+                                    <i class="fas fa-info-circle"></i> Basic Information
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }}</label>
+                                {{ form.title(class="form-control", placeholder="e.g., Paracetamol tablets for children") }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.title.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }}</label>
+                                {{ form.description(class="form-control", rows="3", placeholder="Provide details about your donation...") }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.description.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Physical Items Section -->
+                        <div id="physicalItemsSection" class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-secondary mb-3">
+                                    <i class="fas fa-boxes"></i> Item Details
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.item_name.id }}" class="form-label">{{ form.item_name.label.text }}</label>
+                                {{ form.item_name(class="form-control", placeholder="e.g., Paracetamol 500mg") }}
+                                {% if form.item_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.item_name.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.quantity.id }}" class="form-label">{{ form.quantity.label.text }}</label>
+                                {{ form.quantity(class="form-control", placeholder="100") }}
+                                {% if form.quantity.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.quantity.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.unit.id }}" class="form-label">{{ form.unit.label.text }}</label>
+                                {{ form.unit(class="form-control", placeholder="tablets") }}
+                                {% if form.unit.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.unit.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.expiry_date.id }}" class="form-label">{{ form.expiry_date.label.text }}</label>
+                                {{ form.expiry_date(class="form-control") }}
+                                {% if form.expiry_date.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.expiry_date.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.batch_number.id }}" class="form-label">{{ form.batch_number.label.text }}</label>
+                                {{ form.batch_number(class="form-control", placeholder="LOT123456") }}
+                                {% if form.batch_number.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.batch_number.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.manufacturer.id }}" class="form-label">{{ form.manufacturer.label.text }}</label>
+                                {{ form.manufacturer(class="form-control", placeholder="e.g., Teva Pharmaceuticals") }}
+                                {% if form.manufacturer.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.manufacturer.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Cash Donation Section -->
+                        <div id="cashDonationSection" class="row mb-4" style="display: none;">
+                            <div class="col-12">
+                                <h6 class="text-secondary mb-3">
+                                    <i class="fas fa-money-bill-wave"></i> Cash Donation Details
+                                </h6>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.amount.id }}" class="form-label">{{ form.amount.label.text }}</label>
+                                <div class="input-group">
+                                    {{ form.amount(class="form-control", placeholder="1000000", style="text-align: right;") }}
+                                    <span class="input-group-text">VND</span>
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.amount.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Minimum: 1,000 VND | Maximum: 999,999,999,999 VND (999 billion)
+                                </div>
+                                <div id="amountDisplay" class="form-text text-primary fw-bold" style="display: none;"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Quick Amount</label>
+                                <div class="d-grid gap-1">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" data-amount="100000">100K</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" data-amount="1000000">1M</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" data-amount="10000000">10M</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" data-amount="100000000">100M</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logistics -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-secondary mb-3">
+                                    <i class="fas fa-shipping-fast"></i> Logistics Information
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.pickup_address.id }}" class="form-label">{{ form.pickup_address.label.text }}</label>
+                                {{ form.pickup_address(class="form-control", rows="3", placeholder="Enter your address for pickup or delivery coordination...") }}
+                                {% if form.pickup_address.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.pickup_address.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-shield-alt text-success"></i> Terms and Conditions
+                                        </h6>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                            <label class="form-check-label" for="agreeTerms">
+                                                I confirm that the donated items are safe, unexpired (if applicable), and legally obtained. 
+                                                I agree to the <a href="#" class="text-primary">Terms of Service</a> and 
+                                                <a href="#" class="text-primary">Privacy Policy</a>.
+                                            </label>
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="agreeTransparency" required>
+                                            <label class="form-check-label" for="agreeTransparency">
+                                                I understand that this donation will be tracked transparently on the blockchain 
+                                                for verification purposes.
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{{ url_for('donations.index') }}" class="btn btn-outline-secondary me-md-2">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                    {{ form.submit(class="btn btn-primary btn-lg", id="submitBtn") }}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-question-circle text-info"></i> Need Help?
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>What can I donate?</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Unexpired medications</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Medical supplies and equipment</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Nutritional supplements</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Cash donations</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>How does it work?</h6>
+                            <ol class="list-unstyled">
+                                <li><i class="fas fa-edit text-primary me-2"></i>Fill out this form</li>
+                                <li><i class="fas fa-search text-info me-2"></i>We verify your donation</li>
+                                <li><i class="fas fa-handshake text-success me-2"></i>AI matches with recipients</li>
+                                <li><i class="fas fa-shipping-fast text-warning me-2"></i>Coordinate delivery</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+input[name="amount"] {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.quick-amount {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.quick-amount:hover {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+#amountDisplay {
+    font-size: 1rem;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .quick-amount {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const donationType = document.getElementById('donationType');
+    const physicalItemsSection = document.getElementById('physicalItemsSection');
+    const cashDonationSection = document.getElementById('cashDonationSection');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('donationForm');
+
+    // Toggle sections based on donation type
+    function toggleSections() {
+        const selectedType = donationType.value;
+        
+        if (selectedType === 'cash') {
+            physicalItemsSection.style.display = 'none';
+            cashDonationSection.style.display = 'block';
+        } else {
+            physicalItemsSection.style.display = 'block';
+            cashDonationSection.style.display = 'none';
+        }
+    }
+
+    // Initial toggle
+    toggleSections();
+
+    // Listen for changes
+    donationType.addEventListener('change', toggleSections);
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const agreeTerms = document.getElementById('agreeTerms');
+        const agreeTransparency = document.getElementById('agreeTransparency');
+
+        if (!agreeTerms.checked || !agreeTransparency.checked) {
+            e.preventDefault();
+            alert('Please agree to the terms and conditions before submitting.');
+            return false;
+        }
+
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Donation...';
+        submitBtn.disabled = true;
+    });
+
+    // Format amount input and display
+    const amountInput = document.querySelector('input[name="amount"]');
+    const amountDisplay = document.getElementById('amountDisplay');
+
+    if (amountInput && amountDisplay) {
+        function formatAmount(value) {
+            if (!value || value === '0') return '';
+
+            const num = parseInt(value);
+            if (isNaN(num)) return '';
+
+            // Format with thousands separator
+            const formatted = num.toLocaleString('vi-VN');
+
+            // Convert to readable format (K, M, B)
+            let readable = '';
+            if (num >= 1000000000) {
+                readable = `${(num / 1000000000).toFixed(1)} tỷ`;
+            } else if (num >= 1000000) {
+                readable = `${(num / 1000000).toFixed(1)} triệu`;
+            } else if (num >= 1000) {
+                readable = `${(num / 1000).toFixed(0)} nghìn`;
+            }
+
+            return { formatted, readable };
+        }
+
+        function updateAmountDisplay() {
+            const value = amountInput.value.replace(/[^0-9]/g, '');
+            const result = formatAmount(value);
+
+            if (result.readable) {
+                amountDisplay.textContent = `≈ ${result.readable} VND`;
+                amountDisplay.style.display = 'block';
+            } else {
+                amountDisplay.style.display = 'none';
+            }
+        }
+
+        amountInput.addEventListener('input', function(e) {
+            // Remove non-numeric characters
+            let value = e.target.value.replace(/[^0-9]/g, '');
+
+            // Limit to maximum value
+            if (value && parseInt(value) > 999999999999) {
+                value = '999999999999';
+            }
+
+            e.target.value = value;
+            updateAmountDisplay();
+        });
+
+        // Initial display update
+        updateAmountDisplay();
+    }
+
+    // Quick amount buttons
+    document.querySelectorAll('.quick-amount').forEach(button => {
+        button.addEventListener('click', function() {
+            const amount = this.dataset.amount;
+            if (amountInput) {
+                amountInput.value = amount;
+                amountInput.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}
