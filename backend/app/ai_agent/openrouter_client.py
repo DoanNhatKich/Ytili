@@ -96,34 +96,45 @@ class OpenRouterClient:
         model: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
-        stream: bool = False
+        stream: bool = False,
+        retry_count: int = 0
     ) -> Dict[str, Any]:
         """
-        Get chat completion from OpenRouter API
-        
+        Get chat completion from OpenRouter API with enhanced error handling
+
         Args:
             messages: List of conversation messages
             model: Model to use (defaults to primary model)
             temperature: Sampling temperature (0-1)
             max_tokens: Maximum tokens in response
             stream: Whether to stream the response
-            
+            retry_count: Current retry attempt
+
         Returns:
             API response or error information
         """
+        # Input validation
+        if not messages:
+            return {
+                "success": False,
+                "error": "No messages provided",
+                "model_used": model or self.primary_model,
+                "response_time": 0
+            }
+
         if not await self._check_rate_limit():
             logger.warning("Rate limit exceeded, waiting...")
             await asyncio.sleep(1)
-            
+
         model = model or self.primary_model
         max_tokens = max_tokens or self.max_response_tokens
-        
+
         # Trim conversation history
         trimmed_messages = await self._trim_conversation_history(messages)
-        
+
+        start_time = time.time()
+
         try:
-            start_time = time.time()
-            
             if stream:
                 return await self._stream_completion(
                     trimmed_messages, model, temperature, max_tokens
@@ -136,43 +147,67 @@ class OpenRouterClient:
                     max_tokens=max_tokens,
                     stream=False
                 )
-                
+
                 response_time = time.time() - start_time
-                
+
+                # Validate response
+                if not response.choices or not response.choices[0].message:
+                    raise ValueError("Invalid response structure from API")
+
                 result = {
                     "success": True,
-                    "response": response.choices[0].message.content,
+                    "response": response.choices[0].message.content or "",
                     "model_used": model,
                     "tokens_used": response.usage.total_tokens if response.usage else 0,
                     "response_time": response_time,
                     "finish_reason": response.choices[0].finish_reason
                 }
-                
+
                 logger.info(
                     "OpenRouter API call successful",
                     model=model,
                     tokens=result["tokens_used"],
                     response_time=response_time
                 )
-                
+
                 return result
-                
+
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout error with {model}")
+            error_msg = "Request timed out"
+        except aiohttp.ClientError as e:
+            logger.error(f"Network error with {model}: {str(e)}")
+            error_msg = f"Network error: {str(e)}"
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error with {model}: {str(e)}")
+            error_msg = f"Invalid response format: {str(e)}"
         except Exception as e:
-            logger.error(f"OpenRouter API error with {model}: {str(e)}")
-            
-            # Try fallback model if primary failed
-            if model == self.primary_model and self.fallback_model:
-                logger.info(f"Trying fallback model: {self.fallback_model}")
-                return await self.chat_completion(
-                    messages, self.fallback_model, temperature, max_tokens, stream
-                )
-            
-            return {
-                "success": False,
-                "error": str(e),
-                "model_used": model,
-                "response_time": time.time() - start_time if 'start_time' in locals() else 0
-            }
+            logger.error(f"Unexpected error with {model}: {str(e)}")
+            error_msg = str(e)
+
+        # Retry logic with exponential backoff
+        if retry_count < 2:
+            wait_time = (2 ** retry_count) * 1  # 1s, 2s, 4s
+            logger.info(f"Retrying in {wait_time}s (attempt {retry_count + 1}/3)")
+            await asyncio.sleep(wait_time)
+            return await self.chat_completion(
+                messages, model, temperature, max_tokens, stream, retry_count + 1
+            )
+
+        # Try fallback model if primary failed and we haven't tried it yet
+        if model == self.primary_model and self.fallback_model and retry_count == 0:
+            logger.info(f"Trying fallback model: {self.fallback_model}")
+            return await self.chat_completion(
+                messages, self.fallback_model, temperature, max_tokens, stream, 0
+            )
+
+        return {
+            "success": False,
+            "error": error_msg,
+            "model_used": model,
+            "response_time": time.time() - start_time,
+            "retry_count": retry_count
+        }
     
     async def _stream_completion(
         self,
@@ -181,10 +216,12 @@ class OpenRouterClient:
         temperature: float,
         max_tokens: int
     ) -> AsyncGenerator[Dict[str, Any], None]:
-        """Stream chat completion response"""
+        """Stream chat completion response with enhanced error handling"""
+        start_time = time.time()
+        full_response = ""
+        chunk_count = 0
+
         try:
-            start_time = time.time()
-            
             stream = await self.client.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -192,22 +229,37 @@ class OpenRouterClient:
                 max_tokens=max_tokens,
                 stream=True
             )
-            
-            full_response = ""
-            
+
             async for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    content = chunk.choices[0].delta.content
-                    full_response += content
-                    
-                    yield {
-                        "success": True,
-                        "content": content,
-                        "full_response": full_response,
-                        "model_used": model,
-                        "is_complete": False
-                    }
-            
+                chunk_count += 1
+
+                # Handle different chunk types
+                if hasattr(chunk, 'choices') and chunk.choices:
+                    choice = chunk.choices[0]
+
+                    # Check for content
+                    if hasattr(choice, 'delta') and choice.delta and choice.delta.content:
+                        content = choice.delta.content
+                        full_response += content
+
+                        yield {
+                            "success": True,
+                            "content": content,
+                            "full_response": full_response,
+                            "model_used": model,
+                            "is_complete": False,
+                            "chunk_count": chunk_count
+                        }
+
+                    # Check for finish reason
+                    if hasattr(choice, 'finish_reason') and choice.finish_reason:
+                        break
+
+                # Timeout protection for streaming
+                if time.time() - start_time > 30:  # 30 second timeout
+                    logger.warning("Streaming timeout reached")
+                    break
+
             # Final chunk with complete response
             response_time = time.time() - start_time
             yield {
@@ -216,16 +268,37 @@ class OpenRouterClient:
                 "full_response": full_response,
                 "model_used": model,
                 "response_time": response_time,
-                "is_complete": True
+                "is_complete": True,
+                "chunk_count": chunk_count,
+                "total_tokens": await self._count_tokens(full_response)
             }
-            
+
+            logger.info(
+                "Streaming completed successfully",
+                model=model,
+                chunks=chunk_count,
+                response_time=response_time,
+                response_length=len(full_response)
+            )
+
+        except asyncio.TimeoutError:
+            logger.error("Streaming timeout error")
+            yield {
+                "success": False,
+                "error": "Streaming timeout",
+                "model_used": model,
+                "is_complete": True,
+                "response_time": time.time() - start_time
+            }
         except Exception as e:
             logger.error(f"Streaming error: {str(e)}")
             yield {
                 "success": False,
                 "error": str(e),
                 "model_used": model,
-                "is_complete": True
+                "is_complete": True,
+                "response_time": time.time() - start_time,
+                "partial_response": full_response if full_response else None
             }
     
     async def get_embedding(self, text: str) -> Optional[List[float]]:

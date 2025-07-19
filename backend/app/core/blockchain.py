@@ -229,15 +229,17 @@ class BlockchainService:
         try:
             # Get the directory where this file is located
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            # Go up to app directory, then to contracts
-            contracts_dir = os.path.join(current_dir, "..", "contracts")
-            abi_file_path = os.path.join(contracts_dir, f"{contract_name}.sol", f"{contract_name}.json")
+            # Go up to backend directory, then to contracts directory
+            backend_dir = os.path.dirname(os.path.dirname(current_dir))
+            contracts_dir = os.path.join(backend_dir, "contracts")
+            abi_file_path = os.path.join(contracts_dir, f"{contract_name}.json")
 
             with open(abi_file_path, 'r') as f:
                 contract_artifact = json.load(f)
                 return contract_artifact['abi']
         except Exception as e:
             print(f"Error loading ABI for {contract_name}: {e}")
+            print(f"Attempted path: {abi_file_path if 'abi_file_path' in locals() else 'Path not constructed'}")
             # Fallback to simplified ABI
             return self._get_fallback_abi(contract_name)
     

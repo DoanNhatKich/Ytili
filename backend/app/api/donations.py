@@ -1,6 +1,8 @@
 """
 Donation API endpoints
 """
+import hashlib
+import json
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +16,30 @@ from ..models.user import User
 from ..models.donation import DonationType, DonationStatus, PaymentStatus
 from ..services.donation_service import DonationService
 from ..core.supabase import get_supabase_service, Tables
+from ..core.blockchain import blockchain_service
 
 router = APIRouter()
+
+
+def calculate_metadata_hash(donation_data: dict) -> str:
+    """Calculate hash of donation metadata for blockchain integrity"""
+    # Create a consistent string representation of the donation data
+    metadata = {
+        "title": donation_data.get("title", ""),
+        "description": donation_data.get("description", ""),
+        "donation_type": donation_data.get("donation_type", ""),
+        "item_name": donation_data.get("item_name", ""),
+        "quantity": donation_data.get("quantity", 0),
+        "unit": donation_data.get("unit", ""),
+        "amount": donation_data.get("amount", 0),
+        "currency": donation_data.get("currency", "VND")
+    }
+
+    # Create deterministic JSON string
+    metadata_str = json.dumps(metadata, sort_keys=True, separators=(',', ':'))
+
+    # Calculate SHA-256 hash
+    return hashlib.sha256(metadata_str.encode()).hexdigest()
 
 
 class DonationCreate(BaseModel):
@@ -63,7 +87,7 @@ async def create_donation(
     donation_data: DonationCreate,
     current_user: dict = Depends(get_current_verified_user_supabase)
 ):
-    """Create a new donation - Supabase version"""
+    """Create a new donation - Blockchain-first approach"""
 
     try:
         supabase = get_supabase_service()
@@ -95,18 +119,70 @@ async def create_donation(
                     detail="Invalid expiry_date format. Use YYYY-MM-DD"
                 )
 
-        # Insert into Supabase
+        # Generate unique donation ID and metadata hash
+        import uuid
+        donation_id = str(uuid.uuid4())
+        metadata_hash = calculate_metadata_hash(donation_dict)
+
+        # Map donation type to integer for blockchain
+        type_mapping = {
+            'medication': 1,
+            'medical_supply': 2,
+            'food': 3,
+            'cash': 4
+        }
+
+        # STEP 1: Record on blockchain FIRST
+        blockchain_tx = await blockchain_service.record_donation_on_blockchain(
+            donation_id=donation_id,
+            donor_id=current_user['id'],
+            donation_type=type_mapping[donation_dict['donation_type']],
+            title=donation_dict['title'],
+            description=donation_dict.get('description', ''),
+            amount=int((donation_dict.get('amount', 0) or 0) * 100),  # Convert to cents
+            item_name=donation_dict.get('item_name', ''),
+            quantity=donation_dict.get('quantity', 0) or 0,
+            unit=donation_dict.get('unit', ''),
+            metadata_hash=metadata_hash
+        )
+
+        if not blockchain_tx:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to record donation on blockchain. Transaction aborted."
+            )
+
+        # STEP 2: Add blockchain tracking fields to donation data
+        donation_dict['id'] = donation_id
+        donation_dict['blockchain_status'] = 'confirmed'
+        donation_dict['blockchain_tx_hash'] = blockchain_tx
+        donation_dict['blockchain_recorded_at'] = datetime.utcnow().isoformat()
+        donation_dict['metadata_hash'] = metadata_hash
+
+        # STEP 3: Insert into Supabase database
         result = supabase.table(Tables.DONATIONS).insert(donation_dict).execute()
 
         if not result.data:
+            # If database insert fails, we should ideally revert blockchain transaction
+            # For now, we'll log the error and continue
+            print(f"Warning: Database insert failed but blockchain transaction {blockchain_tx} succeeded")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create donation"
+                detail="Failed to create donation in database"
             )
 
         donation = result.data[0]
 
-        donation = result.data[0]
+        # STEP 4: Record blockchain transaction in tracking table
+        try:
+            supabase.table(Tables.BLOCKCHAIN_TRANSACTIONS).insert({
+                "donation_id": donation_id,
+                "blockchain_hash": blockchain_tx,
+                "status": "confirmed",
+                "network_id": "ytili_saga"
+            }).execute()
+        except Exception as e:
+            print(f"Warning: Failed to record blockchain transaction tracking: {e}")
 
         return {
             "id": donation.get("id"),
@@ -128,7 +204,10 @@ async def create_donation(
             "manufacturer": donation.get("manufacturer"),
             "pickup_address": donation.get("pickup_address"),
             "urgency_level": donation.get("urgency_level", "normal"),
-            "location": donation.get("location", "")
+            "location": donation.get("location", ""),
+            "blockchain_tx_hash": donation.get("blockchain_tx_hash"),
+            "blockchain_status": donation.get("blockchain_status"),
+            "metadata_hash": donation.get("metadata_hash")
         }
 
     except HTTPException:

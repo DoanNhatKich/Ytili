@@ -85,7 +85,13 @@ class Donation(Base):
     
     # Points and rewards
     points_awarded = Column(Integer, default=0)
-    
+
+    # Blockchain tracking
+    blockchain_status = Column(String(50), default="pending")  # pending, recorded, confirmed, failed
+    blockchain_tx_hash = Column(String(66))  # Ethereum transaction hash
+    blockchain_recorded_at = Column(DateTime(timezone=True))
+    metadata_hash = Column(String(64))  # Hash of donation metadata for blockchain
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

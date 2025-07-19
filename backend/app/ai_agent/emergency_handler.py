@@ -132,7 +132,13 @@ class EmergencyHandler:
                 "description": initial_message,
                 "location": location,
                 "contact_phone": contact_phone,
-                "ai_assessment": analysis,
+                "ai_assessment": {
+                    "priority": analysis["priority"].value,
+                    "severity": analysis["severity"],
+                    "response_time_minutes": analysis["response_time_minutes"],
+                    "matched_keywords": analysis["matched_keywords"],
+                    "confidence": analysis["confidence"]
+                },
                 "recommended_actions": self.response_actions[analysis["priority"]],
                 "status": "pending",
                 "created_at": datetime.now(timezone.utc).isoformat()
