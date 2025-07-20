@@ -23,7 +23,7 @@ class DatabaseQueryService:
         
         # Token limits for response optimization
         self.max_context_tokens = 3500  # Leave room for system prompt and user message
-        self.max_items_per_table = 10   # Limit items per table to prevent overflow
+        self.max_items_per_table = 30   # Limit items per table to prevent overflow
         
         # Query patterns for different entity types
         self.query_patterns = {
@@ -34,6 +34,11 @@ class DatabaseQueryService:
                 r'medication.*?([a-zA-ZÀ-ỹ\s]+)',
                 r'phiên.*?quyên góp',
                 r'donation.*?session'
+            ],
+            'campaign_donations': [
+                r'quyên góp.*?chiến dịch',
+                r'campaign donation',
+                r'ủng hộ.*?chiến dịch'
             ],
             'campaigns': [
                 r'chiến dịch.*?([a-zA-ZÀ-ỹ\s]+)',
@@ -59,6 +64,12 @@ class DatabaseQueryService:
                 r'phân tích.*?gian lận',
                 r'fraud.*?analysis',
                 r'suspicious'
+            ],
+            'knowledge': [
+                r'kiến thức',
+                r'knowledge',
+                r'y học',
+                r'medical knowledge'
             ],
             'medications': [
                 r'thuốc.*?([a-zA-ZÀ-ỹ\s]+)',
@@ -97,6 +108,8 @@ class DatabaseQueryService:
             for intent, search_terms in query_intents.items():
                 if intent == 'donations':
                     data, items = await self._query_donations(search_terms)
+                elif intent == 'campaign_donations':
+                    data, items = await self._query_campaign_donations(search_terms)
                 elif intent == 'campaigns':
                     data, items = await self._query_campaigns(search_terms)
                 elif intent == 'transactions':
@@ -105,6 +118,8 @@ class DatabaseQueryService:
                     data, items = await self._query_blockchain_transactions(search_terms)
                 elif intent == 'fraud':
                     data, items = await self._query_fraud_analysis(search_terms)
+                elif intent == 'knowledge':
+                    data, items = await self._query_medical_knowledge(search_terms)
                 elif intent == 'medications':
                     data, items = await self._query_medications(search_terms)
                 
@@ -151,6 +166,14 @@ class DatabaseQueryService:
             if search_terms:
                 intents[intent] = list(set(search_terms))  # Remove duplicates
         
+            # Fallback: if no specific patterns matched, treat whole message as potential medication/donation search term
+        if not intents and len(user_message.strip()) > 2:
+            clean_message = re.sub(r"[^a-zA-ZÀ-ỹ0-9\s]", " ", user_message)
+            term = clean_message.strip()
+            if term:
+                intents["medications"] = [term]
+                intents["donations"] = [term]
+
         return intents
 
     async def _query_donations(self, search_terms: List[str]) -> Tuple[List[Dict], List[Dict]]:
@@ -167,7 +190,9 @@ class DatabaseQueryService:
                 or_conditions = []
                 if term != 'donations':
                     or_conditions.extend([
-                        f"medication_name.ilike.%{term}%",
+                        f"item_name.ilike.%{term}%",
+                        f"item_name.ilike.%{term}%",
+                        f"title.ilike.%{term}%",
                         f"description.ilike.%{term}%",
                         f"notes.ilike.%{term}%"
                     ])
@@ -318,6 +343,51 @@ class DatabaseQueryService:
             logger.error(f"Failed to query fraud analysis: {str(e)}")
             return [], []
 
+    async def _query_medical_knowledge(self, search_terms: List[str]) -> Tuple[List[Dict], List[Dict]]:
+        """Query medical knowledge base table"""
+        try:
+            results = []
+            raw_items = []
+            table = "medical_knowledge_base"
+            for term in search_terms[:3]:
+                query = self.supabase.table(table).select("*")
+                if term != 'knowledge':
+                    result = query.or_(f"title.ilike.%{term}%,content.ilike.%{term}%").limit(5).execute()
+                else:
+                    result = query.order("created_at", desc=True).limit(5).execute()
+                if result.data:
+                    results.extend(result.data)
+                    raw_items.extend(result.data)
+            return results, raw_items
+        except Exception as e:
+            logger.error(f"Failed to query medical knowledge: {str(e)}")
+            return [], []
+
+    async def _query_campaign_donations(self, search_terms: List[str]) -> Tuple[List[Dict], List[Dict]]:
+        """Query campaign_donations table"""
+        try:
+            results = []
+            raw_items = []
+            table = "campaign_donations"
+            for term in search_terms[:3]:
+                query = self.supabase.table(table).select("*")
+                if term != 'campaign_donations':
+                    or_conditions = [
+                        f"campaign_title.ilike.%{term}%",
+                        f"donor_name.ilike.%{term}%",
+                        f"notes.ilike.%{term}%"
+                    ]
+                    result = query.or_(",".join(or_conditions)).limit(5).execute()
+                else:
+                    result = query.order("created_at", desc=True).limit(5).execute()
+                if result.data:
+                    results.extend(result.data)
+                    raw_items.extend(result.data)
+            return results, raw_items
+        except Exception as e:
+            logger.error(f"Failed to query campaign donations: {str(e)}")
+            return [], []
+
     async def _query_medications(self, search_terms: List[str]) -> Tuple[List[Dict], List[Dict]]:
         """Query medication information"""
         try:
@@ -330,8 +400,7 @@ class DatabaseQueryService:
                 
                 or_conditions = [
                     f"name.ilike.%{term}%",
-                    f"vietnamese_name.ilike.%{term}%",
-                    f"active_ingredient.ilike.%{term}%"
+                    f"generic_name.ilike.%{term}%"
                 ]
                 
                 result = query.or_(",".join(or_conditions)).limit(5).execute()
@@ -371,6 +440,8 @@ class DatabaseQueryService:
                 context_parts.extend(self._format_blockchain_context(items))
             elif data_type == 'fraud':
                 context_parts.extend(self._format_fraud_context(items))
+            elif data_type == 'campaign_donations':
+                context_parts.extend(self._format_campaign_donations_context(items))
             elif data_type == 'medications':
                 context_parts.extend(self._format_medications_context(items))
         
@@ -389,8 +460,8 @@ class DatabaseQueryService:
         lines = []
         for donation in donations[:5]:  # Limit to prevent overflow
             lines.append(f"• Donation ID: {donation.get('id')}")
-            if donation.get('medication_name'):
-                lines.append(f"  Medication: {donation['medication_name']}")
+            if donation.get('item_name'):
+                lines.append(f"  Item: {donation['item_name']}")
             if donation.get('quantity'):
                 lines.append(f"  Quantity: {donation['quantity']}")
             if donation.get('expiry_date'):
@@ -471,10 +542,10 @@ class DatabaseQueryService:
         lines = []
         for med in medications[:5]:
             lines.append(f"• Medication: {med.get('name', 'N/A')}")
-            if med.get('vietnamese_name'):
-                lines.append(f"  Vietnamese: {med['vietnamese_name']}")
-            if med.get('active_ingredient'):
-                lines.append(f"  Active Ingredient: {med['active_ingredient']}")
+            if med.get('brand_names'):
+                lines.append(f"  Vietnamese: {med['brand_names']}")
+            if med.get('generic_name'):
+                lines.append(f"  Active Ingredient: {med['generic_name']}")
             if med.get('dosage_form'):
                 lines.append(f"  Form: {med['dosage_form']}")
             if med.get('indications'):

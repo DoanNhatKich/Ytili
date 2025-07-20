@@ -7,7 +7,7 @@ from flask_wtf.csrf import CSRFProtect
 import os
 
 from .config import config
-from .routes import main, auth, donations, transparency, payments, fundraising, fraud
+from .routes import main, auth, donations, transparency, payments, fundraising, fraud, api_proxy
 
 
 def create_app(config_name=None):
@@ -32,6 +32,8 @@ def create_app(config_name=None):
     app.register_blueprint(payments.bp)
     app.register_blueprint(fundraising.bp)
     app.register_blueprint(fraud.fraud_bp)
+    # Proxy: forward /api/v1/* to FastAPI backend
+    app.register_blueprint(api_proxy.bp)
     
     return app
 

@@ -42,7 +42,8 @@ export const TransparencyDashboard: React.FC<TransparencyDashboardProps> = ({
   const fetchTransparencyData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/blockchain/transparency/${donationId}`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
+      const response = await fetch(`${apiBase}/blockchain/transparency/${donationId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

@@ -122,11 +122,11 @@ DEBUG=True
 SECRET_KEY=your-super-secret-key
 
 # Database
-DATABASE_URL=postgresql://ytili_user:ytili_password@localhost:5432/ytili_db
+DATABASE_URL=postgresql://postgres.[YOUR-PROJECT-ID]:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
 
 # OpenRouter API (NO OpenAI allowed per ruleset)
 OPENROUTER_API_KEY=your-openrouter-api-key
-PRIMARY_MODEL=qwen/qwen-2.5-72b-instruct
+PRIMARY_MODEL=qwen/qwen3-235b-a22b:free
 
 # Redis
 REDIS_URL=redis://localhost:6379
