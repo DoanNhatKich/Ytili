@@ -360,7 +360,7 @@ async def get_donation_stats(
 
 @router.get("/")
 async def get_my_donations(
-    current_user: dict = Depends(get_current_verified_user_supabase)
+    current_user: dict = Depends(get_current_user_supabase)
 ):
     """Get current user's donations - Supabase version"""
 

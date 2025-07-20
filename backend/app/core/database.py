@@ -18,10 +18,32 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Async database setup for FastAPI
+# Handle both direct connection and transaction pooler URLs
+import urllib.parse
+
+database_url = settings.DATABASE_URL
+if database_url and not database_url.startswith("postgresql+asyncpg://"):
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+    elif database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+asyncpg://")
+
+# Handle special characters in password by URL encoding if needed
+try:
+    # Test if URL is parseable
+    parsed = urllib.parse.urlparse(database_url)
+    if not parsed.hostname:
+        raise ValueError("Invalid database URL")
+except Exception as e:
+    print(f"Database URL parsing error: {e}")
+    # If parsing fails, it might be due to special characters in password
+
 async_engine = create_async_engine(
-    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+    database_url,
     pool_pre_ping=True,
     pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
     echo=settings.DEBUG
 )
 

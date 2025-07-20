@@ -30,7 +30,7 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     
     # OpenRouter API (NO OpenAI allowed per ruleset)
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "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")
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY")
     OPENROUTER_BASE_URL: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
     PRIMARY_MODEL: str = os.getenv("PRIMARY_MODEL", "qwen/qwen3-235b-a22b:free")
     FALLBACK_MODEL: str = os.getenv("FALLBACK_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
@@ -50,16 +50,16 @@ class Settings:
     MAX_DOCUMENT_SIZE: int = int(os.getenv("MAX_DOCUMENT_SIZE", "10485760"))  # 10MB
 
     # Supabase Configuration
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "https://xhsuajatfcsmrebrlqhx.supabase.co")
-    SUPABASE_PUBLIC_KEY: str = os.getenv("SUPABASE_PUBLIC_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhoc3VhamF0ZmNzbXJlYnJscWh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzY0MjMsImV4cCI6MjA2ODE1MjQyM30.DpEfDd1GKF4lL-o2WvQuP-rXdEITqyWJs_P6ABCoH8A")
-    SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhoc3VhamF0ZmNzbXJlYnJscWh4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjU3NjQyMywiZXhwIjoyMDY4MTUyNDIzfQ.adQqI0VWUd7-k-bj-OZFGN69L7iQ31DpOFIqnZezG7U")
-    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "q6sdJqDjjQe1lI1B9ssBYIgNE6YvjikNIq3FOvXSLIznxZPw48MMBBMOvx7T7965xkNrv186gl3sgUcq/3uTEA==")
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL")
+    SUPABASE_PUBLIC_KEY: str = os.getenv("SUPABASE_PUBLIC_KEY")
+    SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY")
+    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET")
     SUPABASE_AUTH_EXPIRY: int = int(os.getenv("SUPABASE_AUTH_EXPIRY", "3600"))
 
     # Blockchain Configuration (Saga)
     SAGA_RPC_URL: str = os.getenv("SAGA_RPC_URL", "https://ytili-2752546100676000-1.jsonrpc.sagarpc.io")
     SAGA_CHAIN_ID: str = os.getenv("SAGA_CHAIN_ID", "ytili_2752546100676000-1")
-    SAGA_PRIVATE_KEY: str = os.getenv("SAGA_PRIVATE_KEY", "089508337775c666afba30ff3ea382b8db512952103958136f0170280e818068")
+    SAGA_PRIVATE_KEY: str = os.getenv("SAGA_PRIVATE_KEY")
 
     # VietQR Configuration
     VIETQR_API_URL: str = os.getenv("VIETQR_API_URL", "https://api.vietqr.io/v2")
@@ -67,10 +67,10 @@ class Settings:
     VIETQR_API_KEY: Optional[str] = os.getenv("VIETQR_API_KEY")
 
     # Smart Contract Addresses (Deployed on Saga)
-    YTILI_TOKEN_ADDRESS: str = os.getenv("YTILI_TOKEN_ADDRESS", "0xced157786AF1dA910F8B4dAbc1F8F96028249782")
-    DONATION_REGISTRY_ADDRESS: str = os.getenv("DONATION_REGISTRY_ADDRESS", "0xB43d4E8D30c6198C0060Ad32d5Ce9Cf1d49fc334")
-    TRANSPARENCY_VERIFIER_ADDRESS: str = os.getenv("TRANSPARENCY_VERIFIER_ADDRESS", "0xBd6b063051F374D0D6838250CfBb0d817344ff35")
-    YTILI_GOVERNANCE_ADDRESS: str = os.getenv("YTILI_GOVERNANCE_ADDRESS", "0x0000000000000000000000000000000000000000")
+    YTILI_TOKEN_ADDRESS: str = os.getenv("YTILI_TOKEN_ADDRESS")
+    DONATION_REGISTRY_ADDRESS: str = os.getenv("DONATION_REGISTRY_ADDRESS")
+    TRANSPARENCY_VERIFIER_ADDRESS: str = os.getenv("TRANSPARENCY_VERIFIER_ADDRESS")
+    YTILI_GOVERNANCE_ADDRESS: str = os.getenv("YTILI_GOVERNANCE_ADDRESS")
     
     # Security
     ALGORITHM: str = "HS256"

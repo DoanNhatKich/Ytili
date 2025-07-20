@@ -411,21 +411,32 @@ class SupabaseAuth:
         return False
     
     def decode_jwt_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """Decode JWT token to get user info (for compatibility)"""
+        """Decode JWT token to get user info (legacy/compatibility)"""
         
+        # Try Supabase secret first
+        secrets_to_try = [supabase_config.SUPABASE_JWT_SECRET]
+
+        # Import legacy settings secret lazily to avoid circular import
         try:
-            # Decode without verification for now (Supabase handles verification)
-            payload = jwt.decode(
-                token,
-                supabase_config.SUPABASE_JWT_SECRET,
-                algorithms=["HS256"],
-                options={"verify_signature": False}  # Supabase already verified
-            )
-            
-            return payload
-            
+            from ..core.config import settings as legacy_settings
+            if legacy_settings.SECRET_KEY not in secrets_to_try:
+                secrets_to_try.append(legacy_settings.SECRET_KEY)
         except Exception:
-            return None
+            pass
+
+        for secret in secrets_to_try:
+            try:
+                payload = jwt.decode(
+                    token,
+                    secret,
+                    algorithms=["HS256"],
+                    options={"verify_signature": False}
+                )
+                return payload
+            except Exception:
+                continue
+        
+        return None
 
 
 # Global authentication instance

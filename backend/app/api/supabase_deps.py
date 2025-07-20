@@ -17,23 +17,37 @@ async def get_current_user_supabase(
 ) -> Dict[str, Any]:
     """Get current authenticated user from Supabase"""
     
-    # Verify the token with Supabase
-    user_data = await supabase_auth.verify_token(credentials.credentials)
-    
+    # No Authorization header
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+
+    # 1) Try Supabase verification first
+    user_data = await supabase_auth.verify_token(token)
+
+    # 2) Fallback to legacy JWT decoding if Supabase verification fails
     if user_data is None:
+        payload = supabase_auth.decode_jwt_token(token)
+        if payload:
+            user_id = payload.get("sub")
+            if user_id:
+                user_profile = await supabase_auth.get_user_profile(user_id)
+                if user_profile:
+                    return user_profile
+
+    # 3) If both verification paths fail -> 401
+    if user_data is None or user_data.get("user_profile") is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    if user_data.get("user_profile") is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User profile not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
+
     return user_data["user_profile"]
 
 
