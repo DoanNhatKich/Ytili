@@ -5,6 +5,7 @@
 
 export { default as AIChatbot } from './AIChatbot';
 export { default as DonationAdvisory } from './DonationAdvisory';
+export { default as ChatWidget } from './ChatWidget';
 
 // Type exports
 export type {
@@ -19,3 +20,7 @@ export type {
   BudgetRange,
   DonationAdvisoryProps
 } from './DonationAdvisory';
+
+export type {
+  ChatWidgetProps
+} from './ChatWidget';

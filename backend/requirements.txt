@@ -42,14 +42,14 @@ structlog==25.4.0
 email-validator==2.2.0
 
 # File handling
-aiofiles==24.1.0
+# aiofiles==24.1.0
 Pillow==11.3.0
 
 # Payment processing (Stripe)
-stripe==12.3.0
+# stripe==12.3.0
 
 # Redis for caching
-redis==6.2.0
+# redis==6.2.0
 
 # Development and testing
 pytest==8.3.4
@@ -57,7 +57,7 @@ pytest-asyncio==0.24.0
 
 # AI Agent Dependencies
 openai>=1.0.0  # For OpenRouter compatibility
-tiktoken>=0.5.0  # Token counting for AI models
+# tiktoken>=0.5.0  # Token counting for AI models
 langchain>=0.1.0  # AI framework for conversation management
 langchain-openai>=0.1.0  # OpenAI integration for LangChain
 

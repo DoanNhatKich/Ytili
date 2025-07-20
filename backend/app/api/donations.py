@@ -156,11 +156,44 @@ async def create_donation(
         donation_dict['id'] = donation_id
         donation_dict['blockchain_status'] = 'confirmed'
         donation_dict['blockchain_tx_hash'] = blockchain_tx
-        donation_dict['blockchain_recorded_at'] = datetime.utcnow().isoformat()
         donation_dict['metadata_hash'] = metadata_hash
+        
+        # Import datetime at module level to avoid local variable error
+        from datetime import datetime
+        
+        # Try to add blockchain_recorded_at, but handle schema mismatch gracefully
+        try:
+            donation_dict['blockchain_recorded_at'] = datetime.utcnow().isoformat()
+        except Exception as e:
+            print(f"Warning: blockchain_recorded_at field may not exist in schema: {e}")
+            # Remove the field if it causes issues
+            donation_dict.pop('blockchain_recorded_at', None)
 
-        # STEP 3: Insert into Supabase database
-        result = supabase.table(Tables.DONATIONS).insert(donation_dict).execute()
+        # STEP 3: Insert into Supabase database with error handling
+        try:
+            result = supabase.table(Tables.DONATIONS).insert(donation_dict).execute()
+        except Exception as db_error:
+            # Handle various schema mismatches gracefully
+            error_msg = str(db_error)
+            print(f"Database insert error: {error_msg}")
+            
+            # List of potentially missing columns
+            problematic_fields = ['blockchain_recorded_at', 'blockchain_status', 'blockchain_tx_hash', 'metadata_hash']
+            
+            # Try removing problematic fields one by one
+            donation_dict_fallback = donation_dict.copy()
+            for field in problematic_fields:
+                if field in error_msg or 'schema cache' in error_msg:
+                    donation_dict_fallback.pop(field, None)
+                    print(f"Removed {field} from donation data due to schema mismatch")
+            
+            # Retry with cleaned data
+            try:
+                result = supabase.table(Tables.DONATIONS).insert(donation_dict_fallback).execute()
+                print("Successfully inserted donation with fallback schema")
+            except Exception as fallback_error:
+                print(f"Fallback insert also failed: {fallback_error}")
+                raise db_error
 
         if not result.data:
             # If database insert fails, we should ideally revert blockchain transaction

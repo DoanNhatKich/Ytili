@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Monitoring Dashboard - Ytili Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fraud-stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .fraud-stat-card.danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    }
+    
+    .fraud-stat-card.warning {
+        background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+    }
+    
+    .fraud-stat-card.success {
+        background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
+    }
+    
+    .fraud-activity-item {
+        border-left: 4px solid #dee2e6;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .fraud-activity-item.high {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .fraud-activity-item.medium {
+        border-left-color: #ffc107;
+        background: #fffbf0;
+    }
+    
+    .fraud-activity-item.low {
+        border-left-color: #28a745;
+        background: #f0fff4;
+    }
+    
+    .risk-user-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .risk-score {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    
+    .risk-score.high {
+        color: #dc3545;
+    }
+    
+    .risk-score.medium {
+        color: #ffc107;
+    }
+    
+    .risk-score.low {
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold text-danger mb-2">
+                        <i class="fas fa-shield-alt"></i> Fraud Monitoring Dashboard
+                    </h1>
+                    <p class="text-muted">Real-time fraud detection and prevention system</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('fraud.fraud_reports') }}" class="btn btn-outline-danger me-2">
+                        <i class="fas fa-list"></i> View Reports
+                    </a>
+                    <button class="btn btn-danger" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="fraud-stat-card danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ fraud_data.get('total_suspicious_activities', 0) }}</h3>
+                        <p class="mb-0">Suspicious Activities</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="fraud-stat-card danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ fraud_data.get('severity_counts', {}).get('high', 0) }}</h3>
+                        <p class="mb-0">High Risk Cases</p>
+                    </div>
+                    <i class="fas fa-ban fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="fraud-stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ fraud_data.get('severity_counts', {}).get('medium', 0) }}</h3>
+                        <p class="mb-0">Medium Risk Cases</p>
+                    </div>
+                    <i class="fas fa-eye fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="fraud-stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ fraud_data.get('severity_counts', {}).get('low', 0) }}</h3>
+                        <p class="mb-0">Low Risk Cases</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Fraud Types Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="fraudTypesChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Risk Severity Levels</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="severityChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- High Risk Users -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> High Risk Users</h5>
+                </div>
+                <div class="card-body">
+                    {% if fraud_data.get('high_risk_users') %}
+                        {% for user in fraud_data.high_risk_users %}
+                        <div class="risk-user-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ user.full_name }}</h6>
+                                    <p class="text-muted small mb-1">{{ user.email }}</p>
+                                    <span class="badge bg-secondary">{{ user.user_type }}</span>
+                                </div>
+                                <div class="text-end">
+                                    <div class="risk-score high">{{ "%.1f"|format(user.risk_score) }}%</div>
+                                    <small class="text-muted">Risk Score</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">Risk Factors:</small>
+                                <ul class="small mb-0">
+                                    {% for factor in user.risk_factors %}
+                                    <li>{{ factor }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-danger" onclick="investigateUser({{ user.user_id }})">
+                                    <i class="fas fa-search"></i> Investigate
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="flagUser({{ user.user_id }})">
+                                    <i class="fas fa-flag"></i> Flag
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-3">No high-risk users detected</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Recent Suspicious Activities</h5>
+                </div>
+                <div class="card-body">
+                    {% if fraud_data.get('recent_activities') %}
+                        {% for activity in fraud_data.recent_activities %}
+                        <div class="fraud-activity-item {{ activity.severity }}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ activity.type.replace('_', ' ').title() }}</h6>
+                                    <p class="mb-1">{{ activity.description }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user"></i> {{ activity.get('user_email', 'Unknown') }}
+                                        <span class="ms-2">
+                                            <i class="fas fa-clock"></i> {{ activity.detected_at }}
+                                        </span>
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ 'danger' if activity.severity == 'high' else 'warning' if activity.severity == 'medium' else 'success' }}">
+                                    {{ activity.severity.upper() }}
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewActivity('{{ activity.get('id', '') }}')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-3">No recent suspicious activities</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-tools"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger w-100 mb-2" onclick="scanForFraud()">
+                                <i class="fas fa-search"></i> Run Fraud Scan
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100 mb-2" onclick="generateReport()">
+                                <i class="fas fa-file-alt"></i> Generate Report
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 mb-2" onclick="exportData()">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100 mb-2" onclick="updateRules()">
+                                <i class="fas fa-cog"></i> Update Rules
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Fraud Types Chart
+    const fraudTypesCtx = document.getElementById('fraudTypesChart').getContext('2d');
+    new Chart(fraudTypesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ fraud_data.get('type_counts', {}).keys() | list | tojson }},
+            datasets: [{
+                data: {{ fraud_data.get('type_counts', {}).values() | list | tojson }},
+                backgroundColor: ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Severity Chart
+    const severityCtx = document.getElementById('severityChart').getContext('2d');
+    new Chart(severityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+                label: 'Cases',
+                data: [
+                    {{ fraud_data.get('severity_counts', {}).get('high', 0) }},
+                    {{ fraud_data.get('severity_counts', {}).get('medium', 0) }},
+                    {{ fraud_data.get('severity_counts', {}).get('low', 0) }}
+                ],
+                backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+
+// Dashboard functions
+function refreshDashboard() {
+    location.reload();
+}
+
+function investigateUser(userId) {
+    alert(`Investigating user ${userId}...`);
+    // Implement user investigation logic
+}
+
+function flagUser(userId) {
+    if (confirm(`Flag user ${userId} for review?`)) {
+        alert(`User ${userId} has been flagged for review.`);
+        // Implement user flagging logic
+    }
+}
+
+function viewActivity(activityId) {
+    alert(`Viewing activity details for ${activityId}...`);
+    // Implement activity detail view
+}
+
+function scanForFraud() {
+    alert('Starting fraud scan...');
+    // Implement fraud scanning logic
+}
+
+function generateReport() {
+    alert('Generating fraud report...');
+    // Implement report generation
+}
+
+function exportData() {
+    alert('Exporting fraud data...');
+    // Implement data export
+}
+
+function updateRules() {
+    alert('Opening fraud detection rules configuration...');
+    // Implement rules update
+}
+</script>
+{% endblock %}

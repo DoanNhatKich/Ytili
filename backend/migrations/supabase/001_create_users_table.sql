@@ -243,3 +243,25 @@ BEGIN
     END CASE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Sample data for users table (3 user types: individual, hospital, organization)
+INSERT INTO users (email, full_name, user_type, status, is_email_verified, organization_name, city, province) VALUES
+('admin@ytili.com', 'Ytili Administrator', 'organization', 'verified', true, 'Ytili Platform', 'Ho Chi Minh City', 'Ho Chi Minh'),
+('doctor@benhviencho.vn', 'Dr. Nguyen Van Duc', 'hospital', 'verified', true, 'Benh Vien Cho Ray', 'Ho Chi Minh City', 'Ho Chi Minh'),
+('pharmacy@pharmacity.vn', 'Pharmacity Manager', 'organization', 'verified', true, 'Pharmacity Vietnam', 'Ha Noi', 'Ha Noi'),
+('donor1@gmail.com', 'Le Thi Mai', 'individual', 'verified', true, null, 'Da Nang', 'Da Nang'),
+('csr@vingroup.vn', 'Vingroup CSR Team', 'organization', 'verified', true, 'Vingroup Corporation', 'Ha Noi', 'Ha Noi');
+
+INSERT INTO user_points (user_id, total_points, available_points, lifetime_earned, lifetime_spent, tier_level) VALUES
+((SELECT id FROM users WHERE email = 'admin@ytili.com'), 10000, 8500, 12000, 3500, 'Platinum'),
+((SELECT id FROM users WHERE email = 'doctor@benhviencho.vn'), 5000, 4200, 6500, 2300, 'Gold'),
+((SELECT id FROM users WHERE email = 'pharmacy@pharmacity.vn'), 3000, 2800, 4200, 1400, 'Silver'),
+((SELECT id FROM users WHERE email = 'donor1@gmail.com'), 1500, 1200, 2000, 800, 'Bronze'),
+((SELECT id FROM users WHERE email = 'csr@vingroup.vn'), 8000, 7500, 10000, 2500, 'Gold');
+
+INSERT INTO kyc_documents (user_id, document_type, file_path, original_filename, is_verified, verified_by, extracted_data) VALUES
+((SELECT id FROM users WHERE email = 'doctor@benhviencho.vn'), 'medical_license', '/uploads/kyc/doctor_license_001.pdf', 'medical_license.pdf', true, (SELECT id FROM users WHERE email = 'admin@ytili.com'), '{"license_number": "BS001234", "expiry": "2025-12-31", "specialty": "pediatrics", "issuing_authority": "Ministry of Health"}'),
+((SELECT id FROM users WHERE email = 'pharmacy@pharmacity.vn'), 'business_license', '/uploads/kyc/pharmacy_license_001.pdf', 'business_license.pdf', true, (SELECT id FROM users WHERE email = 'admin@ytili.com'), '{"license_number": "NT001234", "business_type": "pharmacy", "expiry": "2025-06-30", "address": "789 Hai Ba Trung, Q1, TPHCM"}'),
+((SELECT id FROM users WHERE email = 'csr@vingroup.vn'), 'tax_certificate', '/uploads/kyc/company_tax_001.pdf', 'tax_certificate.pdf', true, (SELECT id FROM users WHERE email = 'admin@ytili.com'), '{"tax_id": "0123456789", "company_name": "Vingroup Corporation", "registration_date": "2020-01-15", "legal_representative": "Pham Nhat Vuong"}'),
+((SELECT id FROM users WHERE email = 'donor1@gmail.com'), 'national_id', '/uploads/kyc/citizen_id_001.jpg', 'citizen_id.jpg', true, (SELECT id FROM users WHERE email = 'admin@ytili.com'), '{"id_number": "123456789012", "name": "Le Thi Mai", "dob": "1990-05-15", "address": "456 Le Van Sy, Q3, TPHCM"}'),
+((SELECT id FROM users WHERE email = 'admin@ytili.com'), 'organization_license', '/uploads/kyc/platform_license_001.pdf', 'platform_license.pdf', true, (SELECT id FROM users WHERE email = 'admin@ytili.com'), '{"license_number": "ADMIN001", "organization_type": "platform", "verification_level": "government", "authorized_operations": ["donation_management", "user_verification"]}');

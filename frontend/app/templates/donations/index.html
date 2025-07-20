@@ -60,7 +60,7 @@
                                         <span class="badge bg-danger">Cancelled</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ donation.created_at[:10] if donation.created_at else 'N/A' }}</td>
                                 <td>
                                     {% if donation.recipient_id %}
                                         <span class="text-success">Assigned</span>
@@ -123,7 +123,7 @@
                             
                             <p class="mb-1"><strong>Donor:</strong> {{ donation.donor.name }}</p>
                             <p class="mb-1"><strong>Location:</strong> {{ donation.donor.city }}, {{ donation.donor.province }}</p>
-                            <p class="mb-1"><strong>Date:</strong> {{ donation.created_at.strftime('%Y-%m-%d') }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ donation.created_at[:10] if donation.created_at else 'N/A' }}</p>
                         </div>
                         <div class="card-footer bg-white">
                             <div class="d-grid">

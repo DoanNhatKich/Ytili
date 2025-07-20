@@ -52,7 +52,7 @@ async def index():
     
     try:
         # Get user's donations
-        donations = await api_client.get('/donations/')
+        donations = await api_client.get('/donations/my')
         
         # Get available donations for hospitals
         available_donations = []

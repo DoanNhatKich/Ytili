@@ -132,3 +132,35 @@ async def get_fraud_dashboard(
         "high_risk_users": high_risk_users,
         "recent_activities": suspicious_activities[:10]  # Return 10 most recent
     }
+
+
+@router.post("/analyze-campaign")
+async def analyze_campaign(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Analyze campaign for fraud risk - Public endpoint for trust scores"""
+    try:
+        fraud_service = FraudDetectionService(db)
+        
+        # Get campaign fraud analysis
+        analysis = await fraud_service.analyze_campaign_fraud_risk(campaign_id)
+        
+        return {
+            "success": True,
+            "campaign_id": campaign_id,
+            "fraud_score": analysis.get("fraud_score", 0),
+            "risk_level": analysis.get("risk_level", "low"),
+            "risk_factors": analysis.get("risk_factors", []),
+            "trust_score": max(0, 100 - analysis.get("fraud_score", 0)),
+            "analysis_date": analysis.get("analysis_date")
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "fraud_score": 0,
+            "risk_level": "unknown",
+            "trust_score": 50
+        }

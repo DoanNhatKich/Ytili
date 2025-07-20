@@ -25,23 +25,12 @@ class YtiliChatbot:
     
     async def start_chat(
         self,
-        user_id: int,
+        user_id: str,  # Changed from int to str to handle "anonymous"
         conversation_type: str = "general_support",
         initial_message: Optional[str] = None,
         context: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """
-        Start a new chat session
-        
-        Args:
-            user_id: ID of the user
-            conversation_type: Type of conversation (donation_advisory, medical_info, etc.)
-            initial_message: Optional initial message
-            context: Additional context data
-            
-        Returns:
-            Chat session information
-        """
+        """Start a new chat session"""
         try:
             # Convert string to enum
             conv_type = ConversationType(conversation_type)
@@ -50,9 +39,10 @@ class YtiliChatbot:
             if not context:
                 context = {}
             
-            # Get user information for context
-            user_context = await self._get_user_context(user_id)
-            context.update(user_context)
+            # Get user information for context (skip for anonymous)
+            if user_id != "anonymous":
+                user_context = await self._get_user_context(user_id)
+                context.update(user_context)
             
             # Start conversation with AI agent
             result = await self.ai_agent.start_conversation(
@@ -63,14 +53,6 @@ class YtiliChatbot:
             )
             
             if result["success"]:
-                # If it's an emergency, also trigger emergency handler
-                if conv_type == ConversationType.EMERGENCY_REQUEST:
-                    await self.emergency_handler.process_emergency_request(
-                        user_id=user_id,
-                        session_id=result["session_id"],
-                        initial_message=initial_message or ""
-                    )
-                
                 # Add welcome message based on conversation type
                 welcome_message = self._get_welcome_message(conv_type)
                 if welcome_message:
@@ -242,39 +224,59 @@ class YtiliChatbot:
                 "error": str(e)
             }
     
-    async def _get_user_context(self, user_id: int) -> Dict[str, Any]:
+    async def _get_user_context(self, user_id: str) -> Dict[str, Any]:
         """Get user context information"""
         try:
+            # Skip context for anonymous users
+            if user_id == "anonymous":
+                return {"user_type": "anonymous"}
+
+            # Validate UUID format
+            try:
+                import uuid
+                uuid.UUID(user_id)
+            except ValueError:
+                logger.warning(f"Invalid UUID format for user_id: {user_id}")
+                return {"user_type": "unknown"}
+
             # Get user info from Supabase
             user_result = self.ai_agent.supabase.table("users").select("*").eq("id", user_id).execute()
-            
+
             if not user_result.data:
-                return {}
-            
+                return {"user_type": "not_found"}
+
             user = user_result.data[0]
-            
-            # Get user donation history
-            donations_result = self.ai_agent.supabase.table("donations").select("*").eq("donor_id", user_id).limit(10).execute()
-            
-            # Get user points
-            points_result = self.ai_agent.supabase.table("user_points").select("*").eq("user_id", user_id).execute()
-            
+
+            # Get user donation history (with error handling)
+            try:
+                donations_result = self.ai_agent.supabase.table("donations").select("*").eq("donor_id", user_id).limit(10).execute()
+                donation_count = len(donations_result.data) if donations_result.data else 0
+            except Exception:
+                donation_count = 0
+
+            # Get user points (with error handling)
+            try:
+                points_result = self.ai_agent.supabase.table("user_points").select("*").eq("user_id", user_id).execute()
+                points = points_result.data[0] if points_result.data else None
+            except Exception:
+                points = None
+
             context = {
-                "user_type": user.get("user_type"),
+                "user_type": user.get("user_type", "individual"),
                 "location": {
                     "city": user.get("city"),
                     "province": user.get("province")
                 },
-                "donation_history": len(donations_result.data) if donations_result.data else 0,
-                "points": points_result.data[0] if points_result.data else None,
+                "donation_history": donation_count,
+                "points": points,
                 "is_verified": user.get("is_kyc_verified", False)
             }
-            
+
             return context
-            
+
         except Exception as e:
             logger.error(f"Failed to get user context: {str(e)}")
-            return {}
+            return {"user_type": "error"}
     
     async def _get_conversation_type(self, session_id: str) -> Optional[ConversationType]:
         """Get conversation type for a session"""

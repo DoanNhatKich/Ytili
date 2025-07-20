@@ -100,11 +100,26 @@ class YtiliMobile {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', (e) => {
                 e.preventDefault();
-                const target = document.querySelector(anchor.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+                const href = anchor.getAttribute('href');
+                
+                // Validate selector before using it
+                if (href && href.length > 1 && href !== '#') {
+                    try {
+                        const target = document.querySelector(href);
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('Invalid selector:', href, error);
+                    }
+                } else {
+                    // Handle empty hash - scroll to top
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
                     });
                 }
             });

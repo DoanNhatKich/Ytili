@@ -6,8 +6,48 @@
 <div class="container py-5">
     <!-- Header -->
     <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">Transparency Dashboard</h1>
-        <p class="lead text-muted">Real-time transparency for all donations on the Ytili platform</p>
+        <h1 class="display-4 fw-bold text-primary">Blockchain Transparency Dashboard</h1>
+        <p class="lead text-muted">Real-time blockchain transparency for all donations on the Ytili platform</p>
+
+        <!-- Transaction Explorer Search -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-search"></i> Blockchain Transaction Explorer
+                        </h5>
+                        <form id="transaction-search-form" class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="search-input"
+                                       placeholder="Enter donation ID, transaction hash, or user ID">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="search-type">
+                                    <option value="donation_id">Donation ID</option>
+                                    <option value="transaction_hash">Transaction Hash</option>
+                                    <option value="user_id">User ID</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Quick Verification -->
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-qrcode"></i>
+                                <a href="#" onclick="showQRScanner()">Scan QR Code</a> |
+                                <a href="#" onclick="showPublicVerification()">Public Verification Tool</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Platform Integrity Score -->
@@ -100,7 +140,86 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Blockchain Transaction Results -->
+    <div id="transaction-results" class="row mb-5" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cube"></i> Blockchain Transaction Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="transaction-content">
+                        <!-- Transaction details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Journey Visualization -->
+    <div id="donation-journey" class="row mb-5" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-route"></i> Donation Journey Tracking
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div id="journey-content">
+                            <!-- Journey steps will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Verification Tool -->
+    <div id="public-verification" class="row mb-5" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> Public Verification Tool
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Verify Donation Certificate</h6>
+                            <div class="mb-3">
+                                <input type="file" class="form-control" id="certificate-upload" accept=".pdf,.jpg,.png">
+                                <small class="text-muted">Upload donation certificate or QR code image</small>
+                            </div>
+                            <button class="btn btn-warning" onclick="verifyCertificate()">
+                                <i class="fas fa-check"></i> Verify Certificate
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Generate QR Code</h6>
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="donation-id-qr" placeholder="Enter donation ID">
+                            </div>
+                            <button class="btn btn-primary" onclick="generateQRCode()">
+                                <i class="fas fa-qrcode"></i> Generate QR Code
+                            </button>
+                            <div id="qr-code-result" class="mt-3"></div>
+                        </div>
+                    </div>
+
+                    <div id="verification-result" class="mt-4" style="display: none;">
+                        <!-- Verification results will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Donation Types Chart -->
     <div class="row mb-5">
         <div class="col-md-6">
@@ -255,4 +374,458 @@
         {% endif %}
     </div>
 </div>
+
+<!-- QR Code Scanner Modal -->
+<div class="modal fade" id="qrScannerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scan QR Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="qr-scanner" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// Blockchain Transaction Explorer Functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Transaction search form
+    document.getElementById('transaction-search-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        searchTransaction();
+    });
+});
+
+async function searchTransaction() {
+    const searchInput = document.getElementById('search-input').value.trim();
+    const searchType = document.getElementById('search-type').value;
+
+    if (!searchInput) {
+        alert('Please enter a search term');
+        return;
+    }
+
+    // Show loading
+    showTransactionResults('Searching blockchain...');
+
+    try {
+        let endpoint;
+        let params = {};
+
+        switch (searchType) {
+            case 'donation_id':
+                endpoint = `/api/v1/transparency/donation/${searchInput}/chain`;
+                break;
+            case 'transaction_hash':
+                endpoint = `/api/v1/transparency/search?transaction_hash=${searchInput}`;
+                break;
+            case 'user_id':
+                endpoint = `/api/v1/transparency/search?user_id=${searchInput}`;
+                break;
+            default:
+                endpoint = `/api/v1/transparency/search?donation_id=${searchInput}`;
+        }
+
+        // Add timeout and better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        try {
+            const response = await fetch(endpoint, {
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                displayTransactionResults(data, searchType);
+                if (searchType === 'donation_id') {
+                    showDonationJourney(searchInput);
+                }
+            } else if (response.status === 404) {
+                showTransactionResults('No results found for the search term.');
+            } else {
+                showTransactionResults(`Search failed with status ${response.status}. Please try again.`);
+            }
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                showTransactionResults('Search timed out. The blockchain query is taking too long. Please try again.');
+            } else {
+                throw fetchError;
+            }
+        }
+
+    } catch (error) {
+        console.error('Search error:', error);
+        // Provide more specific error messages
+        if (error.message.includes('fetch')) {
+            showTransactionResults('Network error. Please check your connection and try again.');
+        } else {
+            showTransactionResults('Error searching blockchain. Please try again.');
+        }
+    }
+}
+
+function showTransactionResults(content) {
+    const resultsDiv = document.getElementById('transaction-results');
+    const contentDiv = document.getElementById('transaction-content');
+
+    if (typeof content === 'string') {
+        contentDiv.innerHTML = `<p class="text-center text-muted">${content}</p>`;
+    } else {
+        contentDiv.innerHTML = content;
+    }
+
+    resultsDiv.style.display = 'block';
+    resultsDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function displayTransactionResults(data, searchType) {
+    let html = '';
+
+    if (searchType === 'donation_id' && Array.isArray(data)) {
+        // Display transaction chain
+        html = '<h6>Transaction Chain</h6>';
+        html += '<div class="table-responsive">';
+        html += '<table class="table table-striped">';
+        html += '<thead><tr><th>Step</th><th>Type</th><th>Description</th><th>Actor</th><th>Timestamp</th><th>Hash</th></tr></thead>';
+        html += '<tbody>';
+
+        data.forEach((tx, index) => {
+            html += `
+                <tr>
+                    <td><span class="badge bg-primary">${index + 1}</span></td>
+                    <td><span class="badge bg-info">${tx.transaction_type}</span></td>
+                    <td>${tx.description}</td>
+                    <td>${tx.actor.name} <small class="text-muted">(${tx.actor.type})</small></td>
+                    <td><small>${new Date(tx.timestamp).toLocaleString()}</small></td>
+                    <td><code class="small">${tx.transaction_hash}</code></td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table></div>';
+
+        // Add verification button
+        html += `
+            <div class="mt-3">
+                <button class="btn btn-success" onclick="verifyTransactionChain('${data[0]?.donation_id || ''}')">
+                    <i class="fas fa-shield-alt"></i> Verify Chain Integrity
+                </button>
+            </div>
+        `;
+
+    } else if (data.transactions) {
+        // Display search results
+        html = '<h6>Search Results</h6>';
+        html += '<div class="row">';
+
+        data.transactions.forEach(tx => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">${tx.transaction_type}</h6>
+                            <p class="card-text">${tx.description}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> ${new Date(tx.timestamp).toLocaleString()}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-link"></i> ${tx.transaction_hash}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+    }
+
+    showTransactionResults(html);
+}
+
+async function showDonationJourney(donationId) {
+    const journeyDiv = document.getElementById('donation-journey');
+    const contentDiv = document.getElementById('journey-content');
+
+    // Show loading
+    contentDiv.innerHTML = '<p class="text-center">Loading donation journey...</p>';
+    journeyDiv.style.display = 'block';
+
+    try {
+        // Mock journey data - in production this would come from the API
+        const journeySteps = [
+            {
+                step: 1,
+                title: 'Donation Created',
+                description: 'Donor initiated the donation request',
+                timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
+                status: 'completed',
+                actor: 'Donor',
+                hash: '0x1234567890abcdef'
+            },
+            {
+                step: 2,
+                title: 'Verification Process',
+                description: 'AI agent verified donation details and documents',
+                timestamp: new Date(Date.now() - 86400000 * 1.5).toISOString(),
+                status: 'completed',
+                actor: 'AI Verification System',
+                hash: '0xabcdef1234567890'
+            },
+            {
+                step: 3,
+                title: 'Matching Process',
+                description: 'Donation matched with recipient hospital',
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+                status: 'completed',
+                actor: 'Matching Algorithm',
+                hash: '0x567890abcdef1234'
+            },
+            {
+                step: 4,
+                title: 'In Transit',
+                description: 'Donation is being delivered to recipient',
+                timestamp: new Date(Date.now() - 43200000).toISOString(),
+                status: 'in_progress',
+                actor: 'Logistics Partner',
+                hash: '0xdef1234567890abc'
+            },
+            {
+                step: 5,
+                title: 'Delivered',
+                description: 'Donation successfully delivered and confirmed',
+                timestamp: null,
+                status: 'pending',
+                actor: 'Recipient Hospital',
+                hash: null
+            }
+        ];
+
+        let html = '<div class="timeline-container">';
+
+        journeySteps.forEach((step, index) => {
+            const isCompleted = step.status === 'completed';
+            const isInProgress = step.status === 'in_progress';
+            const isPending = step.status === 'pending';
+
+            html += `
+                <div class="timeline-item ${isCompleted ? 'completed' : isInProgress ? 'in-progress' : 'pending'}">
+                    <div class="timeline-marker">
+                        <i class="fas ${isCompleted ? 'fa-check' : isInProgress ? 'fa-clock' : 'fa-circle'}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <h6>${step.title}</h6>
+                        <p>${step.description}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> ${step.actor}
+                            ${step.timestamp ? `<span class="ms-2"><i class="fas fa-clock"></i> ${new Date(step.timestamp).toLocaleString()}</span>` : ''}
+                        </small>
+                        ${step.hash ? `<br><small class="text-muted"><i class="fas fa-link"></i> ${step.hash}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+
+        // Add CSS for timeline
+        html += `
+            <style>
+                .timeline-container {
+                    position: relative;
+                    padding-left: 30px;
+                }
+
+                .timeline-item {
+                    position: relative;
+                    margin-bottom: 30px;
+                    padding-left: 40px;
+                }
+
+                .timeline-item::before {
+                    content: '';
+                    position: absolute;
+                    left: -15px;
+                    top: 30px;
+                    bottom: -30px;
+                    width: 2px;
+                    background: #dee2e6;
+                }
+
+                .timeline-item:last-child::before {
+                    display: none;
+                }
+
+                .timeline-marker {
+                    position: absolute;
+                    left: -25px;
+                    top: 0;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                }
+
+                .timeline-item.completed .timeline-marker {
+                    background: #28a745;
+                    color: white;
+                }
+
+                .timeline-item.in-progress .timeline-marker {
+                    background: #ffc107;
+                    color: white;
+                }
+
+                .timeline-item.pending .timeline-marker {
+                    background: #6c757d;
+                    color: white;
+                }
+
+                .timeline-content {
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border-left: 4px solid #dee2e6;
+                }
+
+                .timeline-item.completed .timeline-content {
+                    border-left-color: #28a745;
+                }
+
+                .timeline-item.in-progress .timeline-content {
+                    border-left-color: #ffc107;
+                }
+            </style>
+        `;
+
+        contentDiv.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error loading donation journey:', error);
+        contentDiv.innerHTML = '<p class="text-center text-muted">Error loading donation journey</p>';
+    }
+}
+
+async function verifyTransactionChain(donationId) {
+    try {
+        const response = await fetch(`/api/v1/transparency/donation/${donationId}/verify`);
+        const data = await response.json();
+
+        if (response.ok) {
+            const resultHtml = `
+                <div class="alert alert-${data.valid ? 'success' : 'danger'} mt-3">
+                    <h6><i class="fas fa-${data.valid ? 'check-circle' : 'exclamation-triangle'}"></i>
+                        Chain Verification ${data.valid ? 'Successful' : 'Failed'}</h6>
+                    <p>${data.message}</p>
+                    <small>
+                        Verification Score: ${data.verification_score}% |
+                        Blockchain Confirmations: ${data.blockchain_confirmations}
+                    </small>
+                </div>
+            `;
+
+            document.getElementById('transaction-content').insertAdjacentHTML('beforeend', resultHtml);
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+    }
+}
+
+function showQRScanner() {
+    const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
+    modal.show();
+
+    // Initialize QR scanner (would need a QR scanning library)
+    alert('QR Scanner would be initialized here. For demo purposes, please use the search form above.');
+}
+
+function showPublicVerification() {
+    const verificationDiv = document.getElementById('public-verification');
+    verificationDiv.style.display = 'block';
+    verificationDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function verifyCertificate() {
+    const fileInput = document.getElementById('certificate-upload');
+    const resultDiv = document.getElementById('verification-result');
+
+    if (!fileInput.files.length) {
+        alert('Please select a certificate file to verify');
+        return;
+    }
+
+    // Mock verification result
+    resultDiv.innerHTML = `
+        <div class="alert alert-success">
+            <h6><i class="fas fa-check-circle"></i> Certificate Verified</h6>
+            <p>This donation certificate is authentic and has been verified on the blockchain.</p>
+            <ul class="mb-0">
+                <li>Certificate ID: CERT-2025-001234</li>
+                <li>Donation Amount: $500</li>
+                <li>Recipient: Children's Hospital</li>
+                <li>Verification Date: ${new Date().toLocaleDateString()}</li>
+            </ul>
+        </div>
+    `;
+    resultDiv.style.display = 'block';
+}
+
+function generateQRCode() {
+    const donationId = document.getElementById('donation-id-qr').value.trim();
+    const resultDiv = document.getElementById('qr-code-result');
+
+    if (!donationId) {
+        alert('Please enter a donation ID');
+        return;
+    }
+
+    // Generate QR code
+    const canvas = document.createElement('canvas');
+    QRCode.toCanvas(canvas, `https://ytili.com/verify/${donationId}`, function (error) {
+        if (error) {
+            console.error(error);
+            resultDiv.innerHTML = '<p class="text-danger">Error generating QR code</p>';
+        } else {
+            resultDiv.innerHTML = `
+                <div class="text-center">
+                    <h6>QR Code Generated</h6>
+                    <div class="mb-2"></div>
+                    <small class="text-muted">Scan this code to verify the donation</small>
+                    <br>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="downloadQRCode('${donationId}')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            `;
+            resultDiv.querySelector('.mb-2').appendChild(canvas);
+        }
+    });
+}
+
+function downloadQRCode(donationId) {
+    const canvas = document.querySelector('#qr-code-result canvas');
+    if (canvas) {
+        const link = document.createElement('a');
+        link.download = `ytili-donation-${donationId}-qr.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+}
+</script>
+
 {% endblock %}

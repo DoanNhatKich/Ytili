@@ -8,8 +8,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import structlog
 
 from .core.config import settings
-from .api import auth, donations, kyc, catalog, matching, payments, transparency, fraud, supabase_auth, vietqr_payments, blockchain, tokens, websocket, governance, fundraising
-# from .api import ai_agent  # Temporarily disabled for testing
+from .api import auth, donations, kyc, catalog, matching, transparency, fraud, supabase_auth, vietqr_payments, blockchain, tokens, websocket, governance, fundraising, ai_agent
 from .core.database import engine, Base, AsyncSessionLocal
 
 # Configure structured logging
@@ -51,7 +50,8 @@ app.add_middleware(
 
 # CORS middleware
 # Get CORS origins
-cors_origins = [origin.strip() for origin in settings.BACKEND_CORS_ORIGINS.split(",")]
+# Allow any origin in development mode to simplify local testing (avoid CORS issues on LAN IPs)
+cors_origins = ["*"] if settings.ENVIRONMENT == "development" else [origin.strip() for origin in settings.BACKEND_CORS_ORIGINS.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
@@ -95,8 +95,19 @@ async def health_check():
         "status": "healthy",
         "service": "ytili-backend",
         "version": settings.VERSION,
-        "performance_optimizations": "enabled"
+        "performance_optimizations": "enabled",
+        "offline_dataset_age_minutes": _get_offline_dataset_age()
     }
+
+# Helper to compute age of offline dataset
+def _get_offline_dataset_age() -> int:
+    from pathlib import Path
+    import datetime, os
+    data_dir = Path(__file__).resolve().parents[1] / "data" / ".last_sync"
+    if not data_dir.exists():
+        return -1
+    ts = datetime.datetime.fromisoformat(data_dir.read_text().strip())
+    return int((datetime.datetime.utcnow() - ts).total_seconds() // 60)
 
 
 @app.get("/performance")
@@ -184,11 +195,7 @@ app.include_router(
     tags=["matching"]
 )
 
-app.include_router(
-    payments.router,
-    prefix=f"{settings.API_V1_STR}/payments",
-    tags=["payments"]
-)
+# Stripe-based payments module removed (NO Stripe per requirements). VietQR endpoints are used.
 
 app.include_router(
     transparency.router,
@@ -240,12 +247,11 @@ app.include_router(
     tags=["fundraising"]
 )
 
-# Temporarily disabled for testing
-# app.include_router(
-#     ai_agent.router,
-#     prefix=f"{settings.API_V1_STR}/ai-agent",
-#     tags=["ai-agent"]
-# )
+app.include_router(
+    ai_agent.router,
+    prefix=f"{settings.API_V1_STR}/ai-agent",
+    tags=["ai-agent"]
+)
 
 # Error handlers
 @app.exception_handler(404)

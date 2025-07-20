@@ -13,7 +13,7 @@ from ..ai_agent.chatbot import ytili_chatbot
 from ..ai_agent.donation_advisor import donation_advisor
 from ..ai_agent.emergency_handler import emergency_handler
 from ..ai_agent.openrouter_client import openrouter_client
-from ..api.supabase_deps import get_current_user_compat
+from ..api.supabase_deps import get_current_user_compat, get_current_user_optional
 from ..models.user import User
 
 logger = structlog.get_logger()
@@ -55,21 +55,17 @@ class DonationAdviceRequest(BaseModel):
 @router.post("/chat/start")
 async def start_chat(
     request: ChatStartRequest,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)  # Make auth optional
 ) -> Dict[str, Any]:
     """
     Start a new AI chat session
-    
-    Args:
-        request: Chat start request data
-        current_user: Current authenticated user
-        
-    Returns:
-        Chat session information
     """
     try:
+        # Use anonymous user if not authenticated
+        user_id = current_user.id if current_user else "anonymous"
+        
         result = await ytili_chatbot.start_chat(
-            user_id=current_user.id,
+            user_id=user_id,
             conversation_type=request.conversation_type,
             initial_message=request.initial_message,
             context=request.context
@@ -80,7 +76,7 @@ async def start_chat(
         
         logger.info(
             "Chat session started",
-            user_id=current_user.id,
+            user_id=user_id,
             session_id=result["session_id"],
             conversation_type=request.conversation_type
         )
@@ -95,7 +91,7 @@ async def start_chat(
 @router.post("/chat/message")
 async def send_message(
     request: ChatMessageRequest,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     Send a message in an existing chat session
@@ -146,7 +142,7 @@ async def send_message(
 async def get_chat_history(
     session_id: str,
     limit: int = 50,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     Get chat history for a session
@@ -184,7 +180,7 @@ async def get_chat_history(
 @router.post("/chat/end")
 async def end_chat(
     request: ConversationFeedback,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     End a chat session with optional feedback
@@ -216,7 +212,7 @@ async def end_chat(
 @router.post("/donation-advice")
 async def get_donation_advice(
     request: DonationAdviceRequest,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     Get personalized donation recommendations
@@ -273,7 +269,7 @@ async def get_donation_advice(
 async def create_emergency_request(
     request: EmergencyRequest,
     background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     Create an emergency medical request
@@ -335,7 +331,7 @@ async def create_emergency_request(
 @router.get("/emergency/{emergency_id}/status")
 async def get_emergency_status(
     emergency_id: int,
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     Get status of an emergency request
@@ -400,7 +396,7 @@ async def ai_health_check() -> Dict[str, Any]:
 
 @router.get("/analytics")
 async def get_ai_analytics(
-    current_user = Depends(get_current_user_compat)
+    current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
     Get AI analytics for the current user

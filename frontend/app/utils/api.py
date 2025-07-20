@@ -109,3 +109,49 @@ class APIClient:
     async def verify_email(self, token: str) -> Dict[str, Any]:
         """Verify user email"""
         return await self.post("/auth/verify-email", {"token": token})
+
+
+# Synchronous wrapper functions for Flask routes
+def make_api_request(method: str, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """
+    Synchronous wrapper for API requests (for use in Flask routes)
+    """
+    import asyncio
+    import requests
+    from flask import current_app, session
+
+    try:
+        # Use requests for synchronous calls
+        base_url = current_app.config.get('BACKEND_API_URL', 'http://localhost:8000')
+        api_prefix = current_app.config.get('API_V1_STR', '/api/v1')
+        url = f"{base_url}{api_prefix}{endpoint}"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+
+        # Add auth token if available
+        token = session.get('access_token')
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        if method.upper() == 'GET':
+            response = requests.get(url, headers=headers, params=data, timeout=10)
+        elif method.upper() == 'POST':
+            response = requests.post(url, headers=headers, json=data, timeout=10)
+        elif method.upper() == 'PUT':
+            response = requests.put(url, headers=headers, json=data, timeout=10)
+        elif method.upper() == 'DELETE':
+            response = requests.delete(url, headers=headers, timeout=10)
+        else:
+            return None
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+
+    except Exception as e:
+        print(f"API request failed: {e}")
+        return None

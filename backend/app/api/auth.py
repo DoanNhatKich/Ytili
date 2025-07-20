@@ -5,11 +5,9 @@ from datetime import timedelta
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
 
-from ..core.database import get_db
+from ..core.supabase import get_supabase_service
 from ..core.security import (
     create_access_token,
     verify_password,
@@ -52,14 +50,15 @@ class Token(BaseModel):
 
 @router.post("/register", response_model=dict)
 async def register(
-    user_data: UserRegister,
-    db: AsyncSession = Depends(get_db)
+    user_data: UserRegister
 ) -> Any:
     """Register a new user"""
     
+    supabase = get_supabase_service()
+
     # Check if user already exists
-    result = await db.execute(select(User).where(User.email == user_data.email))
-    if result.scalar_one_or_none():
+    result = supabase.table("users").select("id").eq("email", user_data.email).execute()
+    if result.data:
         raise HTTPException(
             status_code=400,
             detail="Email already registered"
@@ -68,35 +67,37 @@ async def register(
     # Create new user
     hashed_password = get_password_hash(user_data.password)
     
-    db_user = User(
-        email=user_data.email,
-        hashed_password=hashed_password,
-        full_name=user_data.full_name,
-        user_type=user_data.user_type,
-        phone=user_data.phone,
-        organization_name=user_data.organization_name,
-        license_number=user_data.license_number,
-        address=user_data.address,
-        city=user_data.city,
-        province=user_data.province,
-        status=UserStatus.PENDING
-    )
-    
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
-    
+    # Insert user into Supabase
+    insert_result = supabase.table("users").insert({
+        "email": user_data.email,
+        "hashed_password": hashed_password,
+        "full_name": user_data.full_name,
+        "user_type": user_data.user_type.value,
+        "phone": user_data.phone,
+        "organization_name": user_data.organization_name,
+        "license_number": user_data.license_number,
+        "address": user_data.address,
+        "city": user_data.city,
+        "province": user_data.province,
+        "status": UserStatus.PENDING.value
+    }).execute()
+
+    if not insert_result.data:
+        raise HTTPException(status_code=500, detail="Failed to create user")
+
+    db_user_id = insert_result.data[0]["id"]
+
     # Create user points record
-    user_points = UserPoints(user_id=db_user.id)
-    db.add(user_points)
-    await db.commit()
+    supabase.table("user_points").insert({
+        "user_id": db_user_id
+    }).execute()
     
     # Create email verification token
     verification_token = create_verification_token(user_data.email)
     
     return {
         "message": "User registered successfully",
-        "user_id": db_user.id,
+        "user_id": db_user_id,
         "verification_token": verification_token,
         "status": "pending_verification"
     }
@@ -104,16 +105,18 @@ async def register(
 
 @router.post("/login", response_model=UserLogin)
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """User login"""
     
+    supabase = get_supabase_service()
+
     # Get user by email
-    result = await db.execute(select(User).where(User.email == form_data.username))
-    user = result.scalar_one_or_none()
+    result = supabase.table("users").select("*").eq("email", form_data.username).maybe_single().execute()
+
+    user = result.data
     
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if (not user) or (not verify_password(form_data.password, user["hashed_password"])):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -123,32 +126,29 @@ async def login(
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        subject=user.id, expires_delta=access_token_expires
+        subject=user["id"], expires_delta=access_token_expires
     )
     
     # Update last login
-    from sqlalchemy.sql import func
-    user.last_login = func.now()
-    await db.commit()
+    supabase.table("users").update({"last_login": "now()"}).eq("id", user["id"]).execute()
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": user.id,
-            "email": user.email,
-            "full_name": user.full_name,
-            "user_type": user.user_type.value,
-            "status": user.status.value,
-            "is_verified": user.status == UserStatus.VERIFIED
+            "id": user["id"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "user_type": user["user_type"],
+            "status": user["status"],
+            "is_verified": user["status"] == UserStatus.VERIFIED.value
         }
     }
 
 
 @router.post("/verify-email")
 async def verify_email(
-    token: str,
-    db: AsyncSession = Depends(get_db)
+    token: str
 ) -> Any:
     """Verify user email"""
     
@@ -159,9 +159,11 @@ async def verify_email(
             detail="Invalid or expired verification token"
         )
     
+    supabase = get_supabase_service()
+
     # Get user and update verification status
-    result = await db.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
+    result = supabase.table("users").select("*").eq("email", email).maybe_single().execute()
+    user = result.data
     
     if not user:
         raise HTTPException(
@@ -169,15 +171,17 @@ async def verify_email(
             detail="User not found"
         )
     
-    user.is_email_verified = True
-    
+    update_fields = {
+        "is_email_verified": True
+    }
+
     # Auto-verify individual users, others need KYC
-    if user.user_type == UserType.INDIVIDUAL:
-        user.status = UserStatus.VERIFIED
-    
-    await db.commit()
+    if user["user_type"] == UserType.INDIVIDUAL.value:
+        update_fields["status"] = UserStatus.VERIFIED.value
+
+    supabase.table("users").update(update_fields).eq("id", user["id"]).execute()
     
     return {
         "message": "Email verified successfully",
-        "status": user.status.value
+        "status": update_fields.get("status", user["status"])
     }

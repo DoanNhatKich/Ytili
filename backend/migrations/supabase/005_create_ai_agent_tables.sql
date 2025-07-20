@@ -238,3 +238,11 @@ INSERT INTO medical_knowledge_base (entity_type, name, vietnamese_name, category
 -- Grant necessary permissions (adjust based on your user roles)
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 -- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+-- Add metadata column to ai_messages table
+ALTER TABLE ai_messages 
+ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';
+
+-- Add index for metadata queries
+CREATE INDEX IF NOT EXISTS idx_ai_messages_metadata 
+ON ai_messages USING GIN (metadata);

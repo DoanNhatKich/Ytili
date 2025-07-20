@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..core.supabase_auth import supabase_auth
 from ..core.supabase import get_supabase_service, Tables
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user_supabase(
@@ -91,6 +91,16 @@ async def get_optional_current_user_supabase(
         return await get_current_user_supabase(credentials)
     except HTTPException:
         return None
+
+# -------------------------------------------------------------------------
+# Backward-compat alias: some modules still import get_current_user_optional
+# -------------------------------------------------------------------------
+
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+) -> Optional[Dict[str, Any]]:
+    """Alias for get_optional_current_user_supabase (compatibility)"""
+    return await get_optional_current_user_supabase(credentials)
 
 
 # Backward compatibility wrapper

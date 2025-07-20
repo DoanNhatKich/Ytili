@@ -30,9 +30,9 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     
     # OpenRouter API (NO OpenAI allowed per ruleset)
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "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")
     OPENROUTER_BASE_URL: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-    PRIMARY_MODEL: str = os.getenv("PRIMARY_MODEL", "qwen/qwen-2.5-72b-instruct")
+    PRIMARY_MODEL: str = os.getenv("PRIMARY_MODEL", "qwen/qwen3-235b-a22b:free")
     FALLBACK_MODEL: str = os.getenv("FALLBACK_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
 
     # AI Agent Configuration

@@ -4,6 +4,7 @@ Supabase configuration and client setup for Ytili platform
 import os
 from typing import Optional
 from supabase import create_client, Client
+from supabase.lib.client_options import ClientOptions
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -42,9 +43,14 @@ class SupabaseClient:
         if self._client is None:
             # Create client with basic configuration for now
             # TODO: Add timeout configuration when Supabase Python client supports it
+            opts = ClientOptions()
+            opts.schema = supabase_config.SUPABASE_DB_SCHEMA
+            opts.headers = {"X-Client-Info": "ytili-backend"}
+            opts.timeout = 5  # seconds, prevent long blocking
             self._client = create_client(
                 supabase_config.SUPABASE_URL,
-                supabase_config.SUPABASE_PUBLIC_KEY
+                supabase_config.SUPABASE_PUBLIC_KEY,
+                options=opts
             )
         return self._client
     
@@ -54,9 +60,14 @@ class SupabaseClient:
         if self._service_client is None:
             # Create service client with basic configuration
             # TODO: Add timeout configuration when Supabase Python client supports it
+            opts = ClientOptions()
+            opts.schema = supabase_config.SUPABASE_DB_SCHEMA
+            opts.headers = {"X-Client-Info": "ytili-backend-service"}
+            opts.timeout = 5
             self._service_client = create_client(
                 supabase_config.SUPABASE_URL,
-                supabase_config.SUPABASE_SERVICE_KEY
+                supabase_config.SUPABASE_SERVICE_KEY,
+                options=opts
             )
         return self._service_client
     

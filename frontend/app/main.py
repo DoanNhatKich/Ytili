@@ -3,10 +3,11 @@ Ytili Frontend Main Application
 Flask application entry point
 """
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 import os
 
 from .config import config
-from .routes import main, auth, donations, transparency, payments, fundraising
+from .routes import main, auth, donations, transparency, payments, fundraising, fraud
 
 
 def create_app(config_name=None):
@@ -20,6 +21,9 @@ def create_app(config_name=None):
                 static_url_path='/static')
     app.config.from_object(config[config_name])
     
+    # Initialize CSRF protection
+    csrf = CSRFProtect(app)
+    
     # Register blueprints
     app.register_blueprint(main.bp)
     app.register_blueprint(auth.bp)
@@ -27,6 +31,7 @@ def create_app(config_name=None):
     app.register_blueprint(transparency.bp)
     app.register_blueprint(payments.bp)
     app.register_blueprint(fundraising.bp)
+    app.register_blueprint(fraud.fraud_bp)
     
     return app
 

@@ -319,9 +319,122 @@
         padding-left: max(1rem, env(safe-area-inset-left));
         padding-right: max(1rem, env(safe-area-inset-right));
     }
-    
+
     .container {
         padding-left: max(15px, env(safe-area-inset-left));
         padding-right: max(15px, env(safe-area-inset-right));
+    }
+}
+
+/* Ytili Chat Widget Styles */
+.ytili-chat-widget {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    position: fixed !important;
+    z-index: 9999 !important;
+    bottom: 20px !important;
+    right: 20px !important;
+}
+
+.ytili-chat-window {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 384px;
+    height: 512px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.ytili-chat-window.minimized {
+    height: 48px;
+}
+
+.ytili-mode-selector {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    margin-bottom: 8px;
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    padding: 16px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .ytili-chat-widget {
+        bottom: 10px !important;
+        right: 10px !important;
+        left: 10px !important;
+        width: calc(100vw - 20px) !important;
+    }
+
+    .ytili-chat-window {
+        width: 100%;
+        max-width: 384px;
+        height: 70vh;
+        max-height: 384px;
+    }
+
+    .ytili-mode-selector {
+        width: 100%;
+        max-width: 320px;
+    }
+}
+
+/* Utility classes for chat widget */
+.hidden { display: none !important; }
+.fixed { position: fixed !important; }
+.absolute { position: absolute !important; }
+.relative { position: relative !important; }
+
+/* Color classes */
+.bg-blue-600 { background-color: #2563eb !important; }
+.bg-green-600 { background-color: #16a34a !important; }
+.bg-purple-600 { background-color: #9333ea !important; }
+.bg-red-600 { background-color: #dc2626 !important; }
+.bg-gray-600 { background-color: #4b5563 !important; }
+
+/* Animation classes */
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-ping {
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8,0,1,1);
+    }
+    50% {
+        transform: none;
+        animation-timing-function: cubic-bezier(0,0,0.2,1);
+    }
+}
+
+@keyframes pulse {
+    50% { opacity: .5; }
+}
+
+@keyframes ping {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
     }
 }
