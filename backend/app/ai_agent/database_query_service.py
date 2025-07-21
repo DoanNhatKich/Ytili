@@ -233,8 +233,14 @@ class DatabaseQueryService:
                     result = query.order("created_at", desc=True).limit(self.max_items_per_table).execute()
                 
                 if result.data:
-                    results.extend(result.data)
-                    raw_items.extend(result.data)
+                    # Attach creator profiles to each campaign
+                    campaigns_with_creators = []
+                    for campaign in result.data:
+                        campaign_with_creator = self._attach_creator_profile(campaign)
+                        campaigns_with_creators.append(campaign_with_creator)
+                    
+                    results.extend(campaigns_with_creators)
+                    raw_items.extend(campaigns_with_creators)
             
             return results, raw_items
             
@@ -479,13 +485,17 @@ class DatabaseQueryService:
         for campaign in campaigns[:5]:
             lines.append(f"• Campaign: {campaign.get('title', 'N/A')}")
             if campaign.get('medical_condition'):
-                lines.append(f"  Condition: {campaign['medical_condition']}")
+                lines.append(f"  Condition: {campaign.get('medical_condition')}")
             if campaign.get('goal_amount'):
-                lines.append(f"  Goal: {campaign['goal_amount']:,} VND")
+                lines.append(f"  Goal: {campaign.get('goal_amount'):,} VND")
             if campaign.get('current_amount'):
-                lines.append(f"  Raised: {campaign['current_amount']:,} VND")
+                lines.append(f"  Raised: {campaign.get('current_amount'):,} VND")
             if campaign.get('status'):
-                lines.append(f"  Status: {campaign['status']}")
+                lines.append(f"  Status: {campaign.get('status')}")
+            # Add creator information defensively
+            creator = campaign.get('creator', {})
+            if creator and creator.get('full_name'):
+                lines.append(f"  Creator: {creator.get('full_name', 'Unknown')}")
             lines.append("")
         return lines
 
@@ -552,6 +562,40 @@ class DatabaseQueryService:
                 lines.append(f"  Uses: {med['indications'][:100]}...")
             lines.append("")
         return lines
+
+    def _attach_creator_profile(self, campaign: dict) -> dict:
+        """Attach creator profile to campaign dict - defensive version"""
+        creator_id = campaign.get("creator_id")
+        
+        # Default creator structure - always ensure creator key exists
+        default_creator = {
+            "id": creator_id,
+            "full_name": "",
+            "email": "",
+            "avatar_url": None
+        }
+        
+        if not creator_id:
+            campaign["creator"] = default_creator
+            return campaign
+            
+        try:
+            user_result = self.supabase.table("users").select("id, full_name, email, avatar_url").eq("id", creator_id).execute()
+            if user_result.data:
+                creator = user_result.data[0]
+                campaign["creator"] = {
+                    "id": creator.get("id"),
+                    "full_name": creator.get("full_name", ""),
+                    "email": creator.get("email", ""),
+                    "avatar_url": creator.get("avatar_url")
+                }
+            else:
+                campaign["creator"] = default_creator
+        except Exception as e:
+            logger.error(f"Failed to attach creator profile: {str(e)}")
+            campaign["creator"] = default_creator
+            
+        return campaign
 
 
 # Global database query service instance

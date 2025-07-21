@@ -34,6 +34,10 @@ def create_app(config_name=None):
     app.register_blueprint(fraud.fraud_bp)
     # Proxy: forward /api/v1/* to FastAPI backend
     app.register_blueprint(api_proxy.bp)
+
+    # Exempt AJAX endpoints from CSRF (quick donate)
+    from .routes import fundraising as fundraising_routes
+    csrf.exempt(fundraising_routes.quick_donate)
     
     return app
 

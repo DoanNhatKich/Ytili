@@ -20,6 +20,52 @@ from ..core.blockchain import blockchain_service
 
 router = APIRouter()
 
+# ------------------------------
+# Public list / browse donations
+# ------------------------------
+@router.get("/browse")
+async def browse_donations(
+    status: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+):
+    """Browse donations anonymously with optional status/category filters and pagination.
+
+    Args:
+        status: Optional status filter (pending/matched/completed etc.) Pass 'all' or omit for no filter.
+        category: Optional donation_type filter ('medication', 'medical_supply', 'food', 'cash'). Pass 'all' or omit for no filter.
+        limit: Page size.
+        offset: Offset for pagination.
+    Returns: JSON with total, items list.
+    """
+    try:
+        supabase = get_supabase_service()
+
+        query = supabase.table(Tables.DONATIONS).select("*", count="exact")
+        if status and status != "all":
+            query = query.eq("status", status)
+        if category and category != "all":
+            query = query.eq("donation_type", category)
+        query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
+
+        result = query.execute()
+
+        # Supabase python client returns .data and .count
+        items = result.data or []
+        total = result.count or len(items)
+
+        return {
+            "success": True,
+            "total": total,
+            "items": items,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to browse donations: {str(e)}",
+        )
+
 
 def calculate_metadata_hash(donation_data: dict) -> str:
     """Calculate hash of donation metadata for blockchain integrity"""

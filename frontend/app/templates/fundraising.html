@@ -48,7 +48,7 @@
                                 <div class="text-center p-3 border rounded hover-shadow">
                                     <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
                                     <h6 class="mb-0">Emergency Medical</h6>
-                                    <small class="text-muted">12 active campaigns</small>
+                                    <small class="text-muted">12 active live_campaigns</small>
                                 </div>
                             </a>
                         </div>
@@ -57,7 +57,7 @@
                                 <div class="text-center p-3 border rounded hover-shadow">
                                     <i class="fas fa-child fa-2x text-info mb-2"></i>
                                     <h6 class="mb-0">Children's Health</h6>
-                                    <small class="text-muted">8 active campaigns</small>
+                                    <small class="text-muted">8 active live_campaigns</small>
                                 </div>
                             </a>
                         </div>
@@ -67,7 +67,7 @@
                                 <div class="text-center p-3 border rounded hover-shadow">
                                     <i class="fas fa-procedures fa-2x text-warning mb-2"></i>
                                     <h6 class="mb-0">Surgery & Treatment</h6>
-                                    <small class="text-muted">15 active campaigns</small>
+                                    <small class="text-muted">15 active live_campaigns</small>
                                 </div>
                             </a>
                         </div>
@@ -76,7 +76,7 @@
                                 <div class="text-center p-3 border rounded hover-shadow">
                                     <i class="fas fa-hospital fa-2x text-success mb-2"></i>
                                     <h6 class="mb-0">Hospital Equipment</h6>
-                                    <small class="text-muted">6 active campaigns</small>
+                                    <small class="text-muted">6 active live_campaigns</small>
                                 </div>
                             </a>
                         </div>
@@ -94,37 +94,39 @@
             </h3>
         </div>
 
-        {% if campaigns %}
-            {% for campaign in campaigns[:3] %}
+        {% if featured_campaigns %}
+            {% for campaign in featured_campaigns %}
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header
-                        {% if campaign.urgency_level == 'urgent' %}bg-danger
-                        {% elif campaign.urgency_level == 'high' %}bg-warning
-                        {% else %}bg-info
-                        {% endif %} text-white">
+                    <div class="card-header {% if campaign.urgency_level == 'urgent' %}bg-danger{% elif campaign.urgency_level == 'high' %}bg-warning{% else %}bg-primary{% endif %} text-white">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-light text-dark">{{ campaign.urgency_level.upper() }}</span>
-                            <small><i class="fas fa-clock"></i> {{ campaign.days_left }} days left</small>
+                            <span class="badge bg-light text-dark">{{ campaign.urgency_level|upper if campaign.urgency_level else 'NORMAL' }}</span>
+                            <small><i class="fas fa-clock"></i> {{ campaign.days_left if campaign.days_left else 'Active' }}</small>
                         </div>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">{{ campaign.title }}</h5>
                         <p class="card-text text-muted">
-                            {{ campaign.description[:100] }}{% if campaign.description|length > 100 %}...{% endif %}
+                            {{ campaign.description[:100] if campaign.description else 'No description available' }}{% if campaign.description and campaign.description|length > 100 %}...{% endif %}
                         </p>
-                        <div class="progress mb-3" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: {{ campaign.progress_percentage }}%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <small class="text-muted">{{ "{:,.0f}".format(campaign.current_amount) }} VND raised</small>
-                            <small class="text-muted">{{ campaign.progress_percentage }}% of {{ "{:,.0f}".format(campaign.target_amount) }} VND</small>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Progress</small>
+                                <small class="text-muted">{{ "%.1f"|format((campaign.current_amount / campaign.target_amount * 100) if campaign.target_amount and campaign.target_amount > 0 else 0) }}%</small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: {{ (campaign.current_amount / campaign.target_amount * 100) if campaign.target_amount and campaign.target_amount > 0 else 0 }}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-success fw-bold">{{ "{:,.0f}".format(campaign.current_amount) if campaign.current_amount else '0' }} VND</small>
+                                <small class="text-muted">of {{ "{:,.0f}".format(campaign.target_amount) if campaign.target_amount else '0' }} VND</small>
+                            </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-success">
-                                <i class="fas fa-users"></i> {{ campaign.donor_count }} donors
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> {{ campaign.donor_count or 0 }} donors
                             </small>
-                            <a href="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}" class="btn btn-primary btn-sm">
+                            <a href="{{ url_for('fundraising.detail', campaign_id=campaign.id) }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-heart"></i> Donate Now
                             </a>
                         </div>
@@ -136,7 +138,7 @@
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-heart fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No campaigns available</h4>
+                <h4 class="text-muted">No featured campaigns available</h4>
                 <p class="text-muted">Be the first to start a fundraising campaign!</p>
                 <a href="{{ url_for('fundraising.create') }}" class="btn btn-success">
                     <i class="fas fa-plus"></i> Start Campaign
@@ -171,39 +173,34 @@
 
     <!-- Campaign Grid -->
     <div class="row" id="campaignGrid">
-        {% if campaigns %}
-            {% for campaign in campaigns[3:] %}
-            <div class="col-lg-6 col-xl-4 mb-4">
+        {% if recent_campaigns %}
+            {% for campaign in recent_campaigns %}
+            <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title mb-0">
                                 <a href="{{ url_for('fundraising.detail', campaign_id=campaign.id) }}" class="text-decoration-none">
-                                    {{ campaign.title[:40] }}{% if campaign.title|length > 40 %}...{% endif %}
+                                    {{ campaign.title[:40] if campaign.title else 'Untitled Campaign' }}{% if campaign.title and campaign.title|length > 40 %}...{% endif %}
                                 </a>
                             </h6>
-                            <span class="badge
-                                {% if campaign.status == 'active' %}bg-success
-                                {% elif campaign.status == 'pending' %}bg-warning
-                                {% elif campaign.status == 'completed' %}bg-primary
-                                {% else %}bg-secondary
-                                {% endif %}">{{ campaign.status.title() }}</span>
+                            <span class="badge {% if campaign.status == 'verified' %}bg-success{% elif campaign.status == 'pending' %}bg-warning{% elif campaign.status == 'cancelled' %}bg-danger{% elif campaign.status == 'suspended' %}bg-secondary{% else %}bg-info{% endif %}">{{ campaign.status.title() if campaign.status else 'Active' }}</span>
                         </div>
                         <p class="card-text text-muted small">
-                            {{ campaign.description[:80] }}{% if campaign.description|length > 80 %}...{% endif %}
+                            {{ campaign.description[:80] if campaign.description else 'No description available' }}{% if campaign.description and campaign.description|length > 80 %}...{% endif %}
                         </p>
                         <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: {{ campaign.progress_percentage }}%"></div>
+                            <div class="progress-bar bg-primary" style="width: {{ (campaign.current_amount / campaign.target_amount * 100) if campaign.target_amount and campaign.target_amount > 0 else 0 }}%"></div>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <small class="text-muted">{{ "{:,.0f}".format(campaign.current_amount) }} VND raised</small>
-                            <small class="text-muted">{{ campaign.progress_percentage }}% of {{ "{:,.0f}".format(campaign.target_amount) }} VND</small>
+                            <small class="text-muted">{{ "{:,.0f}".format(campaign.current_amount) if campaign.current_amount else '0' }} VND raised</small>
+                            <small class="text-muted">{{ "%.1f"|format((campaign.current_amount / campaign.target_amount * 100) if campaign.target_amount and campaign.target_amount > 0 else 0) }}% of {{ "{:,.0f}".format(campaign.target_amount) if campaign.target_amount else '0' }} VND</small>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-success">
-                                <i class="fas fa-users"></i> {{ campaign.donor_count }} donors
+                                <i class="fas fa-users"></i> {{ campaign.donor_count or 0 }} donors
                             </small>
-                            <a href="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}" class="btn btn-primary btn-sm">Donate</a>
+                            <a href="{{ url_for('fundraising.detail', campaign_id=campaign.id) }}" class="btn btn-primary btn-sm">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -213,12 +210,55 @@
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No campaigns found</h4>
+                <h4 class="text-muted">No recent campaigns found</h4>
                 <p class="text-muted">Check back later for new fundraising campaigns.</p>
             </div>
         </div>
         {% endif %}
     </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Campaigns pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page - 1 }}&status={{ status_filter }}&category={{ category_filter }}&search={{ search }}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in range(1, total_pages + 1) %}
+                        {% if page_num == page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% elif page_num <= 3 or page_num > total_pages - 3 or (page_num >= page - 1 and page_num <= page + 1) %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}&status={{ status_filter }}&category={{ category_filter }}&search={{ search }}">{{ page_num }}</a>
+                        </li>
+                        {% elif page_num == 4 or page_num == total_pages - 3 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page < total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page + 1 }}&status={{ status_filter }}&category={{ category_filter }}&search={{ search }}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Load More Button -->
     <div class="row">

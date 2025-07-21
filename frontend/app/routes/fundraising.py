@@ -57,26 +57,115 @@ class DonationForm(FlaskForm):
 
 @bp.route('/')
 def index():
-    """Fundraising campaigns page"""
+    """Fundraising campaigns page with filter + pagination"""
     import requests
+    
+    print("=== FUNDRAISING ROUTE CALLED ===")
+    # Get query parameters
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', 'active')
+    category_filter = request.args.get('category', 'all')
+    search = request.args.get('search', '')
+    print(f"Route params: page={page}, status={status_filter}, category={category_filter}, search={search}")
+    
+    PER_PAGE = 12
+
+    offset = (page - 1) * PER_PAGE
+
+    # Build API URL
+    api_url = 'http://localhost:8000/api/v1/fundraising/campaigns'
+    params = {
+        'limit': PER_PAGE,
+        'offset': offset
+    }
+    
+    # Handle status filter - backend expects specific values
+    if status_filter == 'all':
+        # Don't send status parameter to get all campaigns
+        pass
+    elif status_filter:
+        params['status'] = status_filter
+    else:
+        # Default to active campaigns if no filter specified
+        params['status'] = 'active'
+        
+    if category_filter != 'all':
+        params['category'] = category_filter
+    # Note: search is not implemented in backend yet, so we skip it for now
 
     try:
-        # Get campaigns from API
-        campaigns_response = requests.get('http://localhost:8000/api/v1/fundraising/campaigns')
-        campaigns = campaigns_response.json() if campaigns_response.status_code == 200 else []
+        # Get campaigns page
+        print(f"Fetching campaigns from: {api_url} with params: {params}")
+        campaigns_response = requests.get(api_url, params=params)
+        print(f"Response status: {campaigns_response.status_code}")
+        
+        if campaigns_response.status_code == 200:
+            campaigns_page = campaigns_response.json()
+            print(f"Received {len(campaigns_page)} campaigns")
+            if campaigns_page:
+                print(f"First campaign sample: {campaigns_page[0]}")
+        else:
+            print(f"API Error: {campaigns_response.status_code} - {campaigns_response.text}")
+            campaigns_page = []
 
-        # Get categories
+        # For pagination, we'll estimate based on current page size
+        # In a real implementation, the backend should return total count
+        total_records = len(campaigns_page) if len(campaigns_page) < PER_PAGE else (page * PER_PAGE) + 1
+        total_pages = max(1, (total_records + PER_PAGE - 1) // PER_PAGE)
+
+        # Separate Featured and Recent Campaigns as specified:
+        # Featured: verified, pending campaigns
+        # Recent: other verified, pending + cancelled, suspended campaigns
+        featured_campaigns = []
+        recent_campaigns = []
+        
+        for campaign in campaigns_page:
+            status = campaign.get('status', '').lower()
+            if status in ['verified', 'pending']:
+                # Prioritize urgent campaigns for featured section
+                urgency = campaign.get('urgency_level', '').lower()
+                if urgency in ['urgent', 'high'] and len(featured_campaigns) < 6:
+                    featured_campaigns.append(campaign)
+                else:
+                    recent_campaigns.append(campaign)
+            elif status in ['cancelled', 'suspended']:
+                recent_campaigns.append(campaign)
+
+        # Get categories list
         categories_response = requests.get('http://localhost:8000/api/v1/fundraising/campaigns/categories')
         categories_data = categories_response.json() if categories_response.status_code == 200 else {}
         categories = categories_data.get('categories', [])
 
-        return render_template('fundraising.html',
-                             campaigns=campaigns,
-                             categories=categories)
+        return render_template(
+            'fundraising.html',
+            campaigns=campaigns_page,
+            featured_campaigns=featured_campaigns,
+            recent_campaigns=recent_campaigns,
+            categories=categories,
+            status_filter=status_filter,
+            category_filter=category_filter,
+            search=search,
+            page=page,
+            total_pages=total_pages
+        )
 
     except Exception as e:
+        print(f'EXCEPTION in fundraising route: {e}')
+        import traceback
+        print(f'Full traceback: {traceback.format_exc()}')
         flash(f'Error loading campaigns: {e}', 'error')
-        return render_template('fundraising.html', campaigns=[], categories=[])
+        return render_template(
+            'fundraising.html',
+            campaigns=[],
+            featured_campaigns=[],
+            recent_campaigns=[],
+            categories=[],
+            status_filter=status_filter,
+            category_filter=category_filter,
+            search=search,
+            page=page,
+            total_pages=1
+        )
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -312,7 +401,8 @@ def quick_donate():
     if not user:
         return jsonify({'error': 'Not logged in'}), 401
 
-    if user.get('status') != 'verified':
+    # Allow both verified and pending users (email verification disabled for demo)
+    if user.get('status') not in ['verified', 'pending']:
         return jsonify({'error': 'Account not verified'}), 403
 
     data = request.get_json()
@@ -342,15 +432,22 @@ def quick_donate():
             headers=auth_headers
         )
 
-        if response.status_code in [200, 201]:
+        if 200 <= response.status_code < 300:
             response_data = response.json()
             return jsonify({
                 'success': True,
                 'message': f'Thank you for your donation of {amount:,.0f} VND!',
-                'new_total': response_data.get('campaign_new_total', 0)
+                'campaign_new_total': response_data.get('campaign_new_total', 0),
+                'donor_count': response_data.get('donor_count'),
+                'trust_score': response_data.get('trust_score')
             })
         else:
-            return jsonify({'error': 'Donation failed'}), 500
+            # forward backend error
+            try:
+                err_data = response.json()
+            except Exception:
+                err_data = {'detail': response.text}
+            return jsonify({'error': err_data.get('detail', 'Donation failed')}), response.status_code
 
     except Exception as e:
         return jsonify({'error': 'Donation failed'}), 500

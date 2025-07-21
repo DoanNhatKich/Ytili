@@ -2,164 +2,257 @@
 
 {% block title %}{{ campaign.title }} - Chi tiết chiến dịch - Ytili{% endblock %}
 
+{% block extra_css %}
+<!-- Tailwind only for this page -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* Ensure large numbers shrink to fit card without overflow */
+.responsive-stat {
+  font-size: clamp(1rem, 2.5vw, 1.875rem);
+  line-height: 1.2;
+}
+/* Ensure Tailwind doesn’t override Bootstrap navbar link visibility */
+.navbar .nav-link{
+  color:#212529 !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Campaign Header -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-            {% if campaign.image_url %}
-            <img src="{{ campaign.image_url }}" alt="{{ campaign.title }}" class="w-full h-80 object-cover">
-            {% endif %}
-            
-            <div class="p-8">
-                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-8">
-                    <!-- Left Column - Campaign Info -->
-                    <div class="flex-1">
-                        <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ campaign.title }}</h1>
-                        
-                        <!-- Campaign Stats -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div class="text-center p-4 bg-blue-50 rounded-lg">
-                                <div class="text-2xl font-bold text-blue-600">{{ "{:,.0f}".format(campaign.current_amount or 0) }}</div>
-                                <div class="text-sm text-gray-600">VND đã quyên góp</div>
-                            </div>
-                            <div class="text-center p-4 bg-green-50 rounded-lg">
-                                <div class="text-2xl font-bold text-green-600">{{ "{:,.0f}".format(campaign.goal_amount or 0) }}</div>
-                                <div class="text-sm text-gray-600">VND mục tiêu</div>
-                            </div>
-                            <div class="text-center p-4 bg-purple-50 rounded-lg">
-                                <div class="text-2xl font-bold text-purple-600">{{ campaign.donor_count or 0 }}</div>
-                                <div class="text-sm text-gray-600">Người quyên góp</div>
-                            </div>
-                            <div class="text-center p-4 bg-orange-50 rounded-lg">
-                                <div class="text-2xl font-bold text-orange-600">{{ campaign.days_left or 'N/A' }}</div>
-                                <div class="text-sm text-gray-600">Ngày còn lại</div>
-                            </div>
+<!-- Enhanced Campaign Detail Page -->
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Breadcrumb Navigation -->
+            <nav class="flex mb-6" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                            <i class="fas fa-home mr-2"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                            <a href="/fundraising" class="text-sm font-medium text-gray-700 hover:text-blue-600">Gây quỹ</a>
                         </div>
-                        
-                        <!-- Progress Bar -->
-                        <div class="mb-6">
-                            <div class="flex justify-between text-sm text-gray-600 mb-2">
-                                <span>Tiến độ</span>
-                                <span>{{ "{:.1f}".format(((campaign.current_amount or 0) / (campaign.goal_amount or 1) * 100) if (campaign.goal_amount or 0) > 0 else 0) }}%</span>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                            <span class="text-sm font-medium text-gray-500">{{ campaign.title[:50] }}...</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Campaign Header Card -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 border border-gray-100">
+                {% if campaign.images and campaign.images|length > 0 %}
+                <div class="relative">
+                    <img src="{{ campaign.images[0] }}" alt="{{ campaign.title }}" class="w-full h-96 object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 right-6">
+                        <span class="inline-block px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full mb-3">
+                            <i class="fas fa-heartbeat mr-1"></i>{{ campaign.category or 'Y tế' }}
+                        </span>
+                        <h1 class="responsive-stat responsive-stat text-3xl font-bold text-white mb-2 drop-shadow-lg">{{ campaign.title }}</h1>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 h-64 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <i class="fas fa-heart text-6xl mb-4 opacity-80"></i>
+                        <h1 class="responsive-stat responsive-stat text-3xl font-bold mb-2">{{ campaign.title }}</h1>
+                        <span class="inline-block px-4 py-2 bg-white/20 text-white text-sm font-medium rounded-full">
+                            <i class="fas fa-heartbeat mr-1"></i>{{ campaign.category or 'Y tế' }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="p-8">
+                    <div class="flex flex-col xl:flex-row xl:justify-between xl:items-start gap-8">
+                        <!-- Left Column - Campaign Info -->
+                        <div class="flex-1 space-y-8">
+                            <!-- Campaign Stats Grid -->
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 text-center transform hover:scale-105 transition-all duration-200">
+                                    <div id="current-amount-stat" class="responsive-stat font-bold text-blue-600 mb-1">{{ "{:,.0f}".format(campaign.current_amount or 0) }}</div>
+                                    <div class="text-sm text-blue-700 font-medium">VND đã quyên góp</div>
+                                </div>
+                                <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 text-center transform hover:scale-105 transition-all duration-200">
+                                    <div class="responsive-stat font-bold text-green-600 mb-1">{{ "{:,.0f}".format(campaign.target_amount or 0) }}</div>
+                                    <div class="text-sm text-green-700 font-medium">VND mục tiêu</div>
+                                </div>
+                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 text-center transform hover:scale-105 transition-all duration-200">
+                                    <div id="donor-count-stat" class="responsive-stat font-bold text-purple-600 mb-1">{{ campaign.donor_count or 0 }}</div>
+                                    <div class="text-sm text-purple-700 font-medium">Người quyên góp</div>
+                                </div>
+                                <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 text-center transform hover:scale-105 transition-all duration-200">
+                                    <div class="responsive-stat font-bold text-orange-600 mb-1">{{ campaign.days_left or 'N/A' }}</div>
+                                    <div class="text-sm text-orange-700 font-medium">Ngày còn lại</div>
+                                </div>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4">
-                                <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-300" 
-                                     style="width: {{ (campaign.current_amount / campaign.goal_amount * 100) if campaign.goal_amount > 0 else 0 }}%"></div>
+                            
+                            <!-- Enhanced Progress Bar -->
+                            <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900">
+                                        <i class="fas fa-chart-line mr-2 text-blue-600"></i>Tiến độ chiến dịch
+                                    </h3>
+                                    <span class="text-2xl font-bold text-blue-600">{{ "{:.1f}".format(((campaign.current_amount or 0) / (campaign.target_amount or 1) * 100) if (campaign.target_amount or 0) > 0 else 0) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-300 rounded-full h-6 mb-4 overflow-hidden">
+                                    {% set progress_percent = (campaign.current_amount / campaign.target_amount * 100) if campaign.target_amount > 0 else 0 %}
+                                    <div id="progress-bar" class="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 h-6 rounded-full transition-all duration-500 shadow-inner" 
+                                         style="width: {{ progress_percent }}%">
+                                        <div class="h-full bg-gradient-to-r from-white/20 to-transparent rounded-full"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600">
+                                    <span><i class="fas fa-coins mr-1"></i>{{ "{:,.0f}".format(campaign.current_amount or 0) }} VND</span>
+                                    <span><i class="fas fa-target mr-1"></i>{{ "{:,.0f}".format(campaign.target_amount or 0) }} VND</span>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Campaign Description -->
-                        <div class="prose max-w-none mb-6">
-                            <h3 class="text-xl font-semibold text-gray-900 mb-3">Mô tả chiến dịch</h3>
-                            <p class="text-gray-700 leading-relaxed">{{ campaign.description }}</p>
-                        </div>
-                        
-                        <!-- Medical Condition -->
-                        {% if campaign.medical_condition %}
-                        <div class="bg-red-50 border border-red-200 p-6 rounded-lg mb-6">
-                            <h3 class="text-xl font-semibold text-red-900 mb-3">
-                                <i class="fas fa-heartbeat mr-2"></i>Tình trạng y tế
-                            </h3>
-                            <p class="text-red-800">{{ campaign.medical_condition }}</p>
-                        </div>
-                        {% endif %}
+                            
+                            <!-- Campaign Description -->
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                    <i class="fas fa-file-alt mr-2 text-green-600"></i>Mô tả chiến dịch
+                                </h3>
+                                <div class="prose max-w-none">
+                                    <p class="text-gray-700 leading-relaxed text-lg">{{ campaign.description }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Medical Condition -->
+                            {% if campaign.beneficiary_story %}
+                            <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 p-6 rounded-xl shadow-sm">
+                                <h3 class="text-xl font-semibold text-red-900 mb-4 flex items-center">
+                                    <i class="fas fa-heartbeat mr-2 text-red-600"></i>Câu chuyện bệnh nhân
+                                </h3>
+                                <p class="text-red-800 leading-relaxed text-lg">{{ campaign.beneficiary_story }}</p>
+                            </div>
+                            {% endif %}
                         
                         <!-- Campaign Creator -->
-                        <div class="bg-gray-50 p-6 rounded-lg mb-6">
-                            <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                                <i class="fas fa-user mr-2"></i>Người tạo chiến dịch
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-6 rounded-xl shadow-sm">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                <i class="fas fa-user-heart mr-2 text-blue-600"></i>Người tạo chiến dịch
                             </h3>
-                            <div class="flex items-center">
-                                {% if campaign.creator.avatar_url %}
-                                <img src="{{ campaign.creator.avatar_url }}" alt="{{ campaign.creator.full_name }}" class="w-12 h-12 rounded-full mr-4">
-                                {% else %}
-                                <div class="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
-                                    <i class="fas fa-user text-gray-600"></i>
+                            <div class="flex items-center space-x-4">
+                                <div class="relative">
+                                    {% if campaign.creator and campaign.creator.avatar_url %}
+                                    <img src="{{ campaign.creator.avatar_url }}" alt="{{ campaign.creator.full_name }}" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg">
+                                    {% else %}
+                                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                                        <i class="fas fa-user text-white text-2xl"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                                        <i class="fas fa-check text-white text-xs"></i>
+                                    </div>
                                 </div>
-                                {% endif %}
-                                <div>
-                                    <div class="font-semibold text-gray-900">{{ campaign.creator.full_name }}</div>
-                                    <div class="text-sm text-gray-600">{{ campaign.creator.email }}</div>
-                                    <div class="text-sm text-gray-500">Tạo ngày {{ campaign.created_at[:10] if campaign.created_at else 'N/A' }}</div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-gray-900 text-lg">
+                                        {{ campaign.creator.full_name if campaign.creator and campaign.creator.full_name else 'Người dùng ẩn danh' }}
+                                    </div>
+                                    <div class="text-sm text-blue-700 font-medium">Người tạo chiến dịch</div>
+                                    <div class="text-xs text-gray-600 mt-1 flex items-center">
+                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                        Tham gia từ {{ campaign.created_at[:10] if campaign.created_at else 'N/A' }}
+                                    </div>
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-shield-alt mr-1"></i>Đã xác minh
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Right Column - Donation Actions -->
-                    <div class="lg:w-96">
-                        <div class="bg-white border-2 border-blue-200 rounded-lg p-6 sticky top-8">
-                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Quyên góp cho chiến dịch này</h3>
+                    <div class="xl:w-96">
+                        <div class="bg-white border-2 border-blue-200 rounded-2xl p-6 sticky top-8 shadow-xl">
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-bold text-gray-900 mb-2">Quyên góp ngay</h3>
+                                <p class="text-gray-600">Mỗi đóng góp đều có ý nghĩa</p>
+                            </div>
                             
                             <!-- Trust Score -->
-                            <div class="mb-4 p-4 bg-green-50 rounded-lg">
+                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-4 rounded-xl mb-6">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-green-800">Điểm tin cậy</span>
                                     <div class="flex items-center">
-                                        <div class="trust-score text-lg font-bold text-green-600" data-campaign-id="{{ campaign.id }}">
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                        </div>
-                                        <i class="fas fa-shield-alt text-green-600 ml-2"></i>
+                                        <i class="fas fa-shield-check text-green-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-green-800">Điểm tin cậy AI</span>
                                     </div>
+                                    <span class="trust-score text-xl font-bold text-green-600" id="trust-score">Đang tải...</span>
                                 </div>
-                                <div class="text-xs text-green-700 mt-1">Được xác minh bởi AI</div>
+                                <div class="text-xs text-green-700 mt-2 flex items-center">
+                                    <i class="fas fa-robot mr-1"></i>Được xác minh bởi AI
+                                </div>
                             </div>
                             
                             <!-- Quick Donation Amounts -->
-                            <div class="mb-4">
-                                <div class="text-sm font-medium text-gray-700 mb-2">Số tiền quyên góp nhanh:</div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button class="quick-donate-btn p-3 border border-gray-300 rounded-md text-center hover:bg-blue-50 hover:border-blue-300" data-amount="50000">
-                                        50.000 VND
+                            <div class="mb-6">
+                                <div class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                                    <i class="fas fa-bolt mr-2 text-yellow-500"></i>Số tiền quyên góp nhanh
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button class="quick-donate-btn px-4 py-3 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 transform hover:scale-105" data-amount="100000">
+                                        <div class="text-blue-600">100.000</div>
+                                        <div class="text-xs text-gray-500">VND</div>
                                     </button>
-                                    <button class="quick-donate-btn p-3 border border-gray-300 rounded-md text-center hover:bg-blue-50 hover:border-blue-300" data-amount="100000">
-                                        100.000 VND
+                                    <button class="quick-donate-btn px-4 py-3 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 transform hover:scale-105" data-amount="200000">
+                                        <div class="text-blue-600">200.000</div>
+                                        <div class="text-xs text-gray-500">VND</div>
                                     </button>
-                                    <button class="quick-donate-btn p-3 border border-gray-300 rounded-md text-center hover:bg-blue-50 hover:border-blue-300" data-amount="200000">
-                                        200.000 VND
+                                    <button class="quick-donate-btn px-4 py-3 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 transform hover:scale-105" data-amount="500000">
+                                        <div class="text-blue-600">500.000</div>
+                                        <div class="text-xs text-gray-500">VND</div>
                                     </button>
-                                    <button class="quick-donate-btn p-3 border border-gray-300 rounded-md text-center hover:bg-blue-50 hover:border-blue-300" data-amount="500000">
-                                        500.000 VND
+                                    <button class="quick-donate-btn px-4 py-3 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 transform hover:scale-105" data-amount="1000000">
+                                        <div class="text-blue-600">1.000.000</div>
+                                        <div class="text-xs text-gray-500">VND</div>
                                     </button>
                                 </div>
                             </div>
                             
                             <!-- Custom Amount -->
-                            <div class="mb-4">
-                                <label for="custom-amount" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Hoặc nhập số tiền khác:
+                            <div class="mb-6">
+                                <label for="custom-amount" class="block text-sm font-medium text-gray-700 mb-3 flex items-center">
+                                    <i class="fas fa-edit mr-2 text-blue-500"></i>Hoặc nhập số tiền khác
                                 </label>
-                                <input type="number" 
-                                       id="custom-amount" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                       placeholder="Nhập số tiền VND..."
-                                       min="10000"
-                                       step="1000">
+                                <div class="relative">
+                                    <input type="text" id="custom-amount" class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-semibold text-center" placeholder="Nhập số tiền...">
+                                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">VND</div>
+                                </div>
                             </div>
                             
                             <!-- Donate Button -->
-                            <a href="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}" 
-                               id="donate-btn"
-                               class="block w-full bg-blue-600 text-white text-center py-3 px-4 rounded-md font-semibold hover:bg-blue-700 transition-colors">
+                            <a href="/fundraising/{{ campaign.id }}/donate" id="donate-btn" class="block w-full bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white text-center py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mb-6">
                                 <i class="fas fa-heart mr-2"></i>Quyên góp ngay
                             </a>
                             
                             <!-- Share Buttons -->
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <div class="text-sm font-medium text-gray-700 mb-2">Chia sẻ chiến dịch:</div>
-                                <div class="flex space-x-2">
-                                    <button class="share-btn flex-1 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" data-platform="facebook">
-                                        <i class="fab fa-facebook-f"></i>
+                            <div class="pt-6 border-t border-gray-200">
+                                <div class="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                                    <i class="fas fa-share-alt mr-2 text-purple-500"></i>Chia sẻ chiến dịch
+                                </div>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button class="share-btn p-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-all duration-200 transform hover:scale-105" data-platform="facebook" title="Chia sẻ trên Facebook">
+                                        <i class="fab fa-facebook-f text-lg"></i>
                                     </button>
-                                    <button class="share-btn flex-1 p-2 bg-blue-400 text-white rounded-md hover:bg-blue-500" data-platform="twitter">
-                                        <i class="fab fa-twitter"></i>
+                                    <button class="share-btn p-3 bg-sky-500 text-white rounded-xl text-sm font-medium hover:bg-sky-600 transition-all duration-200 transform hover:scale-105" data-platform="twitter" title="Chia sẻ trên Twitter">
+                                        <i class="fab fa-twitter text-lg"></i>
                                     </button>
-                                    <button class="share-btn flex-1 p-2 bg-green-600 text-white rounded-md hover:bg-green-700" data-platform="whatsapp">
-                                        <i class="fab fa-whatsapp"></i>
+                                    <button class="share-btn p-3 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all duration-200 transform hover:scale-105" data-platform="whatsapp" title="Chia sẻ qua WhatsApp">
+                                        <i class="fab fa-whatsapp text-lg"></i>
                                     </button>
-                                    <button class="share-btn flex-1 p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700" data-platform="copy">
-                                        <i class="fas fa-copy"></i>
+                                    <button class="share-btn p-3 bg-gray-500 text-white rounded-xl text-sm font-medium hover:bg-gray-600 transition-all duration-200 transform hover:scale-105" data-platform="copy" title="Sao chép liên kết">
+                                        <i class="fas fa-copy text-lg"></i>
                                     </button>
                                 </div>
                             </div>
@@ -170,44 +263,65 @@
         </div>
         
         <!-- Recent Donations -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h3 class="text-2xl font-semibold text-gray-900 mb-6">
-                <i class="fas fa-list mr-2"></i>Quyên góp gần đây
-            </h3>
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="responsive-stat font-bold text-gray-900 flex items-center">
+                    <i class="fas fa-heart text-red-500 mr-3"></i>Quyên góp gần đây
+                </h3>
+                <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                    {{ recent_donations|length if recent_donations else 0 }} đóng góp
+                </span>
+            </div>
             
             {% if recent_donations %}
             <div class="space-y-4">
                 {% for donation in recent_donations %}
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mr-4">
-                            <i class="fas fa-heart text-white"></i>
+                <div class="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                                <i class="fas fa-heart text-white text-lg"></i>
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
                         </div>
-                        <div>
-                            <div class="font-semibold text-gray-900">
-                                {% if donation.anonymous %}
-                                    Người quyên góp ẩn danh
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-900 text-lg">
+                                {% if donation.is_anonymous %}
+                                    <i class="fas fa-user-secret mr-2 text-gray-500"></i>Người quyên góp ẩn danh
                                 {% else %}
-                                    {{ donation.donor_name }}
+                                    <i class="fas fa-user mr-2 text-blue-500"></i>{{ donation.donor_name or 'Người quyên góp' }}
                                 {% endif %}
                             </div>
-                            <div class="text-sm text-gray-600">{{ donation.created_at[:16].replace('T', ' ') if donation.created_at else 'N/A' }}</div>
+                            <div class="text-sm text-gray-600 flex items-center mt-1">
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ donation.created_at[:16].replace('T', ' ') if donation.created_at else 'N/A' }}
+                            </div>
                             {% if donation.message %}
-                            <div class="text-sm text-gray-700 mt-1 italic">"{{ donation.message }}"</div>
+                            <div class="text-sm text-gray-700 mt-2 p-2 bg-white rounded-lg border-l-4 border-blue-400 italic">
+                                <i class="fas fa-quote-left mr-1 text-blue-400"></i>{{ donation.message }}
+                            </div>
                             {% endif %}
                         </div>
                     </div>
-                    <div class="text-lg font-bold text-green-600">
-                        {{ "{:,.0f}".format(donation.amount or 0) }} VND
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-green-600">
+                            {{ "{:,.0f}".format(donation.amount or 0) }}
+                        </div>
+                        <div class="text-sm text-gray-500 font-medium">VND</div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-heart text-4xl mb-4"></i>
-                <p>Chưa có quyên góp nào cho chiến dịch này.</p>
-                <p class="text-sm">Hãy là người đầu tiên quyên góp!</p>
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-heart text-gray-300 text-3xl"></i>
+                </div>
+                <h4 class="text-xl font-semibold text-gray-700 mb-2">Chưa có quyên góp nào</h4>
+                <p class="text-gray-500 mb-4">Chiến dịch này chưa nhận được quyên góp nào.</p>
+                <p class="text-blue-600 font-medium">Hãy là người đầu tiên đóng góp cho chiến dịch ý nghĩa này!</p>
             </div>
             {% endif %}
         </div>
@@ -350,6 +464,75 @@ document.querySelectorAll('.share-btn').forEach(btn => {
 });
 
 // Load trust score on page load
-document.addEventListener('DOMContentLoaded', loadTrustScore);
+document.addEventListener('DOMContentLoaded', () => {
+  loadTrustScore();
+
+  // BroadcastChannel to receive realtime donation updates
+  const donationChannel = new BroadcastChannel('donation_updates');
+  donationChannel.onmessage = (ev) => {
+    const data = ev.data;
+    if(!data || data.campaign_id !== "{{ campaign.id }}") return;
+
+    // Update stats
+    if(data.campaign_new_total !== undefined){
+      const amt = data.campaign_new_total;
+      document.getElementById('current-amount-stat').innerText = amt.toLocaleString('vi-VN');
+      const targetAmt = {{ campaign.target_amount or 0 }};
+      if(targetAmt > 0){
+        const percent = Math.min(100, (amt/targetAmt)*100);
+        document.getElementById('progress-bar').style.width = percent + '%';
+      }
+    }
+    if(data.donor_count !== undefined){
+      document.getElementById('donor-count-stat').innerText = data.donor_count;
+    }
+
+    // Trust score handling
+    if(data.trust_score !== undefined){
+      const tsElem = document.getElementById('trust-score');
+      const old = window.currentTrustScore || 0;
+      const diff = data.trust_score - old;
+      window.currentTrustScore = data.trust_score;
+      tsElem.innerText = `${data.trust_score}/100`;
+      showTrustNotification(diff);
+    } else {
+      // fallback reload trust score
+      reloadTrustScoreAndNotify();
+    }
+  };
+});
+
+// helper to refetch trust score and show diff
+async function reloadTrustScoreAndNotify(){
+  try{
+    const resp = await fetch(`/api/v1/fraud/analyze-campaign`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campaign_id: "{{ campaign.id }}"})
+    });
+    const data = await resp.json();
+    if(data.success){
+      const tsElem = document.getElementById('trust-score');
+      const old = window.currentTrustScore || 0;
+      const diff = data.trust_score - old;
+      window.currentTrustScore = data.trust_score;
+      tsElem.innerText = `${data.trust_score}/100`;
+      showTrustNotification(diff);
+    }
+  }catch(e){console.error(e);}
+}
+
+// toast notification
+function showTrustNotification(diff){
+  if(!diff) return;
+  const toast = document.createElement('div');
+  toast.className = 'fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-slide-in';
+  toast.innerHTML = `<i class="fas fa-robot"></i><span>Điểm tin cậy AI ${diff>0?'+':''}${diff}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(()=>{
+    toast.classList.add('opacity-0','translate-y-4');
+    setTimeout(()=>toast.remove(),500);
+  }, 4000);
+}
+
+/* Simple slide-in animation */
 </script>
 {% endblock %}

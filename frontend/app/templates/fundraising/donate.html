@@ -3,6 +3,7 @@
 {% block title %}Quyên góp cho {{ campaign.title }} - Ytili{% endblock %}
 
 {% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
         <!-- Campaign Header -->
@@ -18,13 +19,13 @@
                 <div class="mb-6">
                     <div class="flex justify-between text-sm text-gray-600 mb-2">
                         <span>Đã quyên góp: {{ "{:,.0f}".format(campaign.current_amount or 0) }} VND</span>
-                        <span>Mục tiêu: {{ "{:,.0f}".format(campaign.goal_amount or 0) }} VND</span>
+                        <span>Mục tiêu: {{ "{:,.0f}".format(campaign.target_amount or 0) }} VND</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-3">
-                        <div class="bg-blue-600 h-3 rounded-full" style="width: {{ ((campaign.current_amount or 0) / (campaign.goal_amount or 1) * 100) if (campaign.goal_amount or 0) > 0 else 0 }}%"></div>
+                        <div class="bg-blue-600 h-3 rounded-full" style="width: {{ ((campaign.current_amount or 0) / (campaign.target_amount or 1) * 100) if (campaign.target_amount or 0) > 0 else 0 }}%"></div>
                     </div>
                     <div class="text-sm text-gray-600 mt-2">
-                        {{ "{:.1f}".format(((campaign.current_amount or 0) / (campaign.goal_amount or 1) * 100) if (campaign.goal_amount or 0) > 0 else 0) }}% hoàn thành
+                        {{ "{:.1f}".format(((campaign.current_amount or 0) / (campaign.target_amount or 1) * 100) if (campaign.target_amount or 0) > 0 else 0) }}% hoàn thành
                     </div>
                 </div>
                 
@@ -43,7 +44,7 @@
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h2 class="text-2xl font-bold text-gray-900 mb-6">Quyên góp cho chiến dịch này</h2>
             
-            <form id="donationForm" method="POST" action="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}">
+            <form id="mock-donate-form" method="POST" action="{{ url_for('fundraising.donate', campaign_id=campaign.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 
                 <!-- Donation Amount -->
@@ -62,7 +63,7 @@
                     
                     <!-- Quick Amount Buttons -->
                     <div class="mt-3 flex flex-wrap gap-2">
-                        <button type="button" class="amount-btn px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200" data-amount="50000">50.000 VND</button>
+                        <button type="button" class="amount-btn px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200" data-amount="10000">10.000 VND</button>
                         <button type="button" class="amount-btn px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200" data-amount="100000">100.000 VND</button>
                         <button type="button" class="amount-btn px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200" data-amount="200000">200.000 VND</button>
                         <button type="button" class="amount-btn px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200" data-amount="500000">500.000 VND</button>
@@ -71,7 +72,7 @@
                 </div>
                 
                 <!-- Donor Information -->
-                <div class="mb-6">
+                <div class="mb-6" id="donor-info">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Thông tin người quyên góp</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,7 +141,7 @@
                         <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
                             <input type="radio" name="payment_method" value="vietqr" class="mr-3" checked>
                             <div class="flex items-center">
-                                <img src="{{ url_for('static', filename='images/vietqr-logo.png') }}" alt="VietQR" class="w-8 h-8 mr-3">
+                                <img src="https://img.vietqr.io/image/VCB-1049411068-qr_only.png" alt="VietQR" class="w-8 h-8 mr-3">
                                 <div>
                                     <div class="font-medium">VietQR</div>
                                     <div class="text-sm text-gray-600">Chuyển khoản qua mã QR</div>
@@ -149,14 +150,14 @@
                         </label>
                         
                         <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="payment_method" value="bank_transfer" class="mr-3">
+                            <input type="radio" name="payment_method" value="bank_transfer" class="mr-3" disabled>
                             <div class="flex items-center">
                                 <div class="w-8 h-8 bg-blue-500 rounded mr-3 flex items-center justify-center">
                                     <i class="fas fa-university text-white text-sm"></i>
                                 </div>
                                 <div>
                                     <div class="font-medium">Chuyển khoản ngân hàng</div>
-                                    <div class="text-sm text-gray-600">Chuyển khoản trực tiếp</div>
+                                    <div class="text-sm text-red-600">Đang bảo trì</div>
                                 </div>
                             </div>
                         </label>
@@ -165,7 +166,7 @@
                 
                 <!-- Submit Button -->
                 <div class="flex justify-between items-center">
-                    <a href="{{ url_for('fundraising.campaign_detail', campaign_id=campaign.id) }}" 
+                    <a href="{{ url_for('fundraising.detail', campaign_id=campaign.id) }}" 
                        class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
                         Quay lại
                     </a>
@@ -201,19 +202,71 @@ document.getElementById('amount').addEventListener('input', function() {
     }
 });
 
-// Form submission
-document.getElementById('donationForm').addEventListener('submit', function(e) {
-    const amountInput = document.getElementById('amount');
-    const amount = parseInt(amountInput.value.replace(/\D/g, ''));
-    
-    if (amount < 10000) {
-        e.preventDefault();
-        alert('Số tiền quyên góp tối thiểu là 10.000 VND');
+// Toggle donor info visibility
+const anonCheckbox = document.querySelector('input[name="anonymous"]');
+const donorInfoDiv = document.getElementById('donor-info');
+function toggleAnon(){
+  if(anonCheckbox.checked){
+    donorInfoDiv.style.display='none';
+    document.getElementById('donor_name').required=false;
+    document.getElementById('donor_email').required=false;
+  }else{
+    donorInfoDiv.style.display='block';
+    document.getElementById('donor_name').required=true;
+    document.getElementById('donor_email').required=true;
+  }
+}
+anonCheckbox.addEventListener('change', toggleAnon);
+// initialize
+toggleAnon();
+
+// AJAX VietQR donation flow -> backend quick_donate
+const form = document.getElementById('mock-donate-form');
+form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const amountField = document.getElementById('amount');
+    let amount = parseInt(amountField.value.replace(/\D/g, '')) || 0;
+    if(amount < 10000){
+        alert('Số tiền tối thiểu là 10.000 VND');
         return;
     }
-    
-    // Set clean number value for submission
-    amountInput.value = amount;
+
+    const payload = {
+        campaign_id: "{{ campaign.id }}",
+        amount: amount,
+        anonymous: anonCheckbox.checked,
+        message: document.getElementById('message').value || ''
+    };
+
+    try {
+        const resp = await fetch("{{ url_for('fundraising.quick_donate') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if(resp.ok && data.success){
+            // Broadcast to update other pages in real-time
+            const donationChannel = new BroadcastChannel('donation_updates');
+            donationChannel.postMessage({
+                campaign_id: "{{ campaign.id }}",
+                campaign_new_total: data.campaign_new_total,
+                donor_count: data.donor_count,
+                trust_score: data.trust_score
+            });
+            donationChannel.close();
+            alert('Cảm ơn bạn đã ủng hộ thành công!');
+            // Optionally navigate back
+            window.location.href = "{{ url_for('fundraising.detail', campaign_id=campaign.id) }}";
+        } else {
+            alert(data.error || 'Donation failed');
+        }
+    } catch(err){
+        console.error(err);
+        alert('Donation failed');
+    }
 });
 </script>
 {% endblock %}

@@ -282,5 +282,86 @@ async def catalog():
 
 @bp.route('/marketplace')
 def marketplace():
-    """Donation marketplace page"""
-    return render_template('donations/marketplace.html')
+    """Donation marketplace page with filter & pagination"""
+    import requests
+
+    # Get filter parameters
+    status_filter = request.args.get('status', 'all')
+    category_filter = request.args.get('category', 'all')
+    search = request.args.get('search', '')
+    location = request.args.get('location', '')
+    page = int(request.args.get('page', 1))
+    PER_PAGE = 12
+    offset = (page - 1) * PER_PAGE
+
+    # Build API request - use the correct browse endpoint
+    api_url = 'http://localhost:8000/api/v1/donations/browse'
+    params = {
+        'limit': PER_PAGE,
+        'offset': offset
+    }
+    
+    # Add filters
+    if status_filter != 'all':
+        params['status'] = status_filter
+    if category_filter != 'all':
+        params['category'] = category_filter
+    # Note: search and location filters not implemented in backend yet
+
+    try:
+        # Fetch donations from backend
+        resp = requests.get(api_url, params=params)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get('success'):
+                donations = data.get('items', [])
+                total_records = data.get('total', len(donations))
+            else:
+                donations = []
+                total_records = 0
+        else:
+            print(f"Donations API Error: {resp.status_code} - {resp.text}")
+            donations = []
+            total_records = 0
+        
+        # Calculate total pages
+        total_pages = max(1, (total_records + PER_PAGE - 1) // PER_PAGE)
+        
+        # Separate featured and recent donations
+        featured_donations = []
+        recent_donations = []
+        
+        for donation in donations:
+            status = donation.get('status', '').lower()
+            if status in ['verified', 'pending']:
+                # Prioritize urgent/high priority for featured
+                urgency = donation.get('urgency_level', '').lower()
+                if urgency in ['urgent', 'high'] and len(featured_donations) < 6:
+                    featured_donations.append(donation)
+                else:
+                    recent_donations.append(donation)
+            else:
+                recent_donations.append(donation)
+
+        return render_template('donations/marketplace.html',
+                               donations=donations,
+                               featured_donations=featured_donations,
+                               recent_donations=recent_donations,
+                               status_filter=status_filter,
+                               category_filter=category_filter,
+                               search=search,
+                               location=location,
+                               current_page=page,
+                               total_pages=total_pages)
+    except Exception as e:
+        flash(f'Error loading donations: {e}', 'error')
+        return render_template('donations/marketplace.html', 
+                               donations=[],
+                               featured_donations=[],
+                               recent_donations=[],
+                               status_filter=status_filter,
+                               category_filter=category_filter,
+                               search=search,
+                               location=location,
+                               current_page=page,
+                               total_pages=1)

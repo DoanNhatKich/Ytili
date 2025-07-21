@@ -9,6 +9,41 @@ from datetime import datetime, timedelta
 from ..api.supabase_deps import get_current_user_supabase, get_current_verified_user_supabase
 from ..core.supabase import get_supabase_service, Tables
 
+# Helper function to attach creator profile to campaign dict
+def _attach_creator_profile(supabase, campaign: dict) -> dict:
+    """Fetch creator basic profile and attach to campaign dict under 'creator'."""
+    creator_id = campaign.get("creator_id")
+    
+    # Default creator structure - always ensure creator key exists
+    default_creator = {
+        "id": creator_id,
+        "full_name": "",
+        "email": "",
+        "avatar_url": None
+    }
+    
+    if not creator_id:
+        campaign["creator"] = default_creator
+        return campaign
+        
+    try:
+        user_result = supabase.table(Tables.USERS).select("id, full_name, email, avatar_url").eq("id", creator_id).execute()
+        if user_result.data:
+            creator = user_result.data[0]
+            campaign["creator"] = {
+                "id": creator.get("id"),
+                "full_name": creator.get("full_name", ""),
+                "email": creator.get("email", ""),
+                "avatar_url": creator.get("avatar_url")
+            }
+        else:
+            campaign["creator"] = default_creator
+    except Exception as e:
+        # Log the error but don't fail - provide default creator
+        campaign["creator"] = default_creator
+        
+    return campaign
+
 router = APIRouter()
 
 
@@ -126,7 +161,8 @@ async def get_campaigns(
         # Build query
         query = supabase.table(Tables.CAMPAIGNS).select("*")
         
-        if status:
+        # Handle status filter - only apply if status is provided and not 'all'
+        if status and status.lower() != 'all':
             query = query.eq("status", status)
         
         if category:
@@ -141,6 +177,7 @@ async def get_campaigns(
         result = query.execute()
         
         campaigns = []
+
         for campaign in result.data:
             # Calculate progress percentage
             progress = 0
@@ -156,6 +193,7 @@ async def get_campaigns(
                 except:
                     pass
             
+            campaign = _attach_creator_profile(supabase, campaign)
             campaigns.append({
                 "id": campaign.get("id"),
                 "title": campaign.get("title"),
@@ -170,7 +208,8 @@ async def get_campaigns(
                 "urgency_level": campaign.get("urgency_level", "normal"),
                 "created_at": campaign.get("created_at"),
                 "images": campaign.get("images", []),
-                "beneficiary_name": campaign.get("beneficiary_name", "")
+                "beneficiary_name": campaign.get("beneficiary_name", ""),
+                "creator": campaign.get("creator")
             })
         
         return campaigns
@@ -233,6 +272,8 @@ async def get_campaign(campaign_id: str):
             )
 
         campaign = result.data[0]
+        # Attach creator profile
+        campaign = _attach_creator_profile(supabase, campaign)
 
         # Get recent donations to this campaign
         donations_result = supabase.table(Tables.CAMPAIGN_DONATIONS).select(
@@ -271,6 +312,7 @@ async def get_campaign(campaign_id: str):
             "beneficiary_story": campaign.get("beneficiary_story", ""),
             "images": campaign.get("images", []),
             "medical_documents": campaign.get("medical_documents", []),
+            "creator": campaign.get("creator"),
             "creator_id": campaign.get("creator_id"),
             "recent_donations": donations_result.data or []
         }

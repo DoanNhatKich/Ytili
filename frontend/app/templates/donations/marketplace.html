@@ -39,14 +39,24 @@
                                        placeholder="Search medications..." value="{{ request.args.get('search', '') }}">
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {{ 'selected' if status_filter == 'all' }}>All Status</option>
+                                <option value="verified" {{ 'selected' if status_filter == 'verified' }}>Verified</option>
+                                <option value="pending" {{ 'selected' if status_filter == 'pending' }}>Pending</option>
+                                <option value="cancelled" {{ 'selected' if status_filter == 'cancelled' }}>Cancelled</option>
+                                <option value="suspended" {{ 'selected' if status_filter == 'suspended' }}>Suspended</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label for="category" class="form-label">Category</label>
                             <select class="form-select" id="category" name="category">
-                                <option value="">All Categories</option>
-                                <option value="medication" {{ 'selected' if request.args.get('category') == 'medication' }}>Medications</option>
-                                <option value="medical_device" {{ 'selected' if request.args.get('category') == 'medical_device' }}>Medical Devices</option>
-                                <option value="supplies" {{ 'selected' if request.args.get('category') == 'supplies' }}>Medical Supplies</option>
-                                <option value="emergency" {{ 'selected' if request.args.get('category') == 'emergency' }}>Emergency Items</option>
+                                <option value="all" {{ 'selected' if category_filter == 'all' }}>All Categories</option>
+                                <option value="medication" {{ 'selected' if category_filter == 'medication' }}>Medications</option>
+                                <option value="medical_device" {{ 'selected' if category_filter == 'medical_device' }}>Medical Devices</option>
+                                <option value="supplies" {{ 'selected' if category_filter == 'supplies' }}>Medical Supplies</option>
+                                <option value="emergency" {{ 'selected' if category_filter == 'emergency' }}>Emergency Items</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -80,105 +90,63 @@
                 <i class="fas fa-star text-warning"></i> Featured Donations
             </h3>
         </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" data-campaign-id="1">
-                <div class="card-header bg-warning text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="badge bg-light text-dark">URGENT</span>
-                        <small><i class="fas fa-clock"></i> 2 hours ago</small>
+
+        {% if featured_donations %}
+            {% for donation in featured_donations %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header {% if donation.urgency_level == 'urgent' %}bg-danger{% elif donation.urgency_level == 'high' %}bg-warning{% else %}bg-info{% endif %} text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-light text-dark">{{ donation.urgency_level|upper if donation.urgency_level else 'NORMAL' }}</span>
+                            <small><i class="fas fa-clock"></i> {{ donation.created_at[:10] if donation.created_at else 'Recently' }}</small>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Emergency Insulin Supply</h5>
-                    <p class="card-text text-muted">
-                        Urgent need for insulin for diabetic patients at Children's Hospital.
-                    </p>
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> Hanoi, Vietnam
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-success">Verified</span>
-                        <a href="{{ url_for('donations.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-hand-holding-heart"></i> Donate
-                        </a>
-                    </div>
-                    <div class="text-center">
-                        <button class="btn btn-outline-info btn-sm w-100" onclick="trackOnBlockchain('1')">
-                            <i class="fas fa-cube"></i> Track on Blockchain
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" data-campaign-id="2">
-                <div class="card-header bg-info text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="badge bg-light text-dark">HIGH PRIORITY</span>
-                        <small><i class="fas fa-clock"></i> 5 hours ago</small>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Surgical Masks & Gloves</h5>
-                    <p class="card-text text-muted">
-                        Medical protective equipment needed for rural clinic operations.
-                    </p>
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> Da Nang, Vietnam
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-success">Verified</span>
-                        <a href="{{ url_for('donations.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-hand-holding-heart"></i> Donate
-                        </a>
-                    </div>
-                    <div class="text-center">
-                        <button class="btn btn-outline-info btn-sm w-100" onclick="trackOnBlockchain('2')">
-                            <i class="fas fa-cube"></i> Track on Blockchain
-                        </button>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ donation.title or donation.item_name or 'Donation Item' }}</h5>
+                        <p class="card-text text-muted">
+                            {{ donation.description[:100] if donation.description else 'No description available' }}{% if donation.description and donation.description|length > 100 %}...{% endif %}
+                        </p>
+                        {% if donation.quantity and donation.unit %}
+                        <div class="mb-2">
+                            <small class="text-info">
+                                <i class="fas fa-box"></i> {{ donation.quantity }} {{ donation.unit }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-success">
+                                <i class="fas fa-shield-alt"></i> Status: {{ donation.status or 'Available' }}
+                            </small>
+                            <a href="{{ url_for('donations.detail', donation_id=donation.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-hand-holding-heart"></i> Details
+                            </a>
+                        </div>
+                        <div class="text-center mt-2">
+                            <button class="btn btn-outline-info btn-sm w-100" onclick="trackOnBlockchain('{{ donation.id }}')">
+                                <i class="fas fa-cube"></i> Track on Blockchain
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0" data-campaign-id="3">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="badge bg-light text-dark">ONGOING</span>
-                        <small><i class="fas fa-clock"></i> 1 day ago</small>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Blood Pressure Monitors</h5>
-                    <p class="card-text text-muted">
-                        Digital blood pressure monitors for elderly care facility.
-                    </p>
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> Ho Chi Minh City, Vietnam
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-success">Verified</span>
-                        <a href="{{ url_for('donations.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-hand-holding-heart"></i> Donate
-                        </a>
-                    </div>
-                    <div class="text-center">
-                        <button class="btn btn-outline-info btn-sm w-100" onclick="trackOnBlockchain('3')">
-                            <i class="fas fa-cube"></i> Track on Blockchain
-                        </button>
-                    </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="text-muted">
+                    <i class="fas fa-heart fa-3x mb-3"></i>
+                    <h4>No featured donations available</h4>
+                    <p>Be the first to make a featured donation!</p>
+                    <a href="{{ url_for('donations.create') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Add Donation
+                    </a>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
-    <!-- All Donations -->
+    <!-- Recent Donations -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -201,91 +169,93 @@
 
     <!-- Donation Grid -->
     <div class="row" id="donationGrid">
-        <!-- Sample donation items -->
-        <div class="col-lg-6 col-xl-4 mb-4">
-            <div class="card h-100 shadow-sm border-0" data-campaign-id="4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title mb-0">Paracetamol Tablets</h6>
-                        <span class="badge bg-success">Available</span>
-                    </div>
-                    <p class="card-text text-muted small">
-                        500mg tablets, 100 count. Expires: Dec 2025
-                    </p>
-                    <div class="mb-2">
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> Hanoi
-                            <span class="ms-2">
-                                <i class="fas fa-clock"></i> 3 hours ago
-                            </span>
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-success">
-                            <i class="fas fa-shield-alt"></i> Verified Donor
-                        </small>
-                        <a href="#" class="btn btn-primary btn-sm">Donate</a>
+        {% if donations %}
+            {% for d in donations %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">{{ d.title or d.item_name or 'Donation Item' }}</h6>
+                            <span class="badge bg-primary text-uppercase">{{ d.donation_type or 'donation' }}</span>
+                        </div>
+                        <p class="card-text text-muted small">
+                            {{ d.description or 'No description available' }}
+                        </p>
+                        {% if d.quantity and d.unit %}
+                        <div class="mb-2">
+                            <small class="text-info">
+                                <i class="fas fa-box"></i> {{ d.quantity }} {{ d.unit }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ d.created_at[:10] if d.created_at else 'Recently' }}
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-success">
+                                <i class="fas fa-shield-alt"></i> Status: {{ d.status or 'Available' }}
+                            </small>
+                            <a href="{{ url_for('donations.detail', donation_id=d.id) }}" class="btn btn-primary btn-sm">Details</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <h4>No donations found</h4>
+                    <p>Try adjusting your search criteria or check back later for new donations.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 
-        <div class="col-lg-6 col-xl-4 mb-4">
-            <div class="card h-100 shadow-sm border-0" data-campaign-id="5">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title mb-0">Digital Thermometer</h6>
-                        <span class="badge bg-warning">Urgent</span>
-                    </div>
-                    <p class="card-text text-muted small">
-                        Non-contact infrared thermometer, brand new
-                    </p>
-                    <div class="mb-2">
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> Da Nang
-                            <span class="ms-2">
-                                <i class="fas fa-clock"></i> 1 hour ago
-                            </span>
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-success">
-                            <i class="fas fa-shield-alt"></i> Verified Donor
-                        </small>
-                        <a href="#" class="btn btn-primary btn-sm">Donate</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 col-xl-4 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="card-title mb-0">Surgical Gloves</h6>
-                        <span class="badge bg-info">High Priority</span>
-                    </div>
-                    <p class="card-text text-muted small">
-                        Latex-free surgical gloves, size M, 100 pairs
-                    </p>
-                    <div class="mb-2">
-                        <small class="text-muted">
-                            <i class="fas fa-map-marker-alt"></i> Ho Chi Minh City
-                            <span class="ms-2">
-                                <i class="fas fa-clock"></i> 6 hours ago
-                            </span>
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-success">
-                            <i class="fas fa-shield-alt"></i> Verified Donor
-                        </small>
-                        <a href="#" class="btn btn-primary btn-sm">Donate</a>
-                    </div>
-                </div>
-            </div>
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Donations pagination">
+                <ul class="pagination justify-content-center">
+                    {% if current_page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ current_page - 1 }}&status={{ status_filter }}&category={{ category_filter }}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in range(1, total_pages + 1) %}
+                        {% if page_num == current_page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% elif page_num <= 3 or page_num > total_pages - 3 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}&status={{ status_filter }}&category={{ category_filter }}">{{ page_num }}</a>
+                        </li>
+                        {% elif page_num == 4 or page_num == total_pages - 3 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if current_page < total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ current_page + 1 }}&status={{ status_filter }}&category={{ category_filter }}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </div>
+    {% endif %}
 
     <!-- Load More Button -->
     <div class="row">

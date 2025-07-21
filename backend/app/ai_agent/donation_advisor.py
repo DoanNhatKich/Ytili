@@ -200,6 +200,9 @@ class DonationAdvisor:
             
             if result.data:
                 for campaign in result.data:
+                    # Ensure campaign has creator information
+                    campaign = self._attach_creator_profile(campaign)
+                    
                     # Calculate donation suggestion based on budget
                     suggested_amount = self._calculate_suggested_donation(
                         campaign, budget_info
@@ -215,7 +218,8 @@ class DonationAdvisor:
                             "suggested_amount": suggested_amount,
                             "campaign_goal": campaign.get("goal_amount"),
                             "current_amount": campaign.get("current_amount", 0),
-                            "urgency": campaign.get("urgency_level", "medium")
+                            "urgency": campaign.get("urgency_level", "medium"),
+                            "creator": campaign.get("creator", {})
                         },
                         "confidence": 0.8
                     })
@@ -352,6 +356,40 @@ class DonationAdvisor:
         except Exception as e:
             logger.error(f"Failed to get user context by ID: {str(e)}")
             return {"user_id": user_id}
+    
+    def _attach_creator_profile(self, campaign: dict) -> dict:
+        """Attach creator profile to campaign dict - defensive version"""
+        creator_id = campaign.get("creator_id")
+        
+        # Default creator structure - always ensure creator key exists
+        default_creator = {
+            "id": creator_id,
+            "full_name": "",
+            "email": "",
+            "avatar_url": None
+        }
+        
+        if not creator_id:
+            campaign["creator"] = default_creator
+            return campaign
+            
+        try:
+            user_result = self.supabase.table("users").select("id, full_name, email, avatar_url").eq("id", creator_id).execute()
+            if user_result.data:
+                creator = user_result.data[0]
+                campaign["creator"] = {
+                    "id": creator.get("id"),
+                    "full_name": creator.get("full_name", ""),
+                    "email": creator.get("email", ""),
+                    "avatar_url": creator.get("avatar_url")
+                }
+            else:
+                campaign["creator"] = default_creator
+        except Exception as e:
+            logger.error(f"Failed to attach creator profile: {str(e)}")
+            campaign["creator"] = default_creator
+            
+        return campaign
     
     async def _save_recommendation(
         self,

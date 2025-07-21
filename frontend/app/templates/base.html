@@ -12,6 +12,9 @@
     <!-- Custom Mobile-First CSS -->
     <link href="{{ url_for('static', filename='css/mobile.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+
+
+
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -23,33 +26,36 @@
                 <i class="fas fa-heart text-danger"></i> Ytili
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            
+                
+            
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                        <a class="nav-link text-dark" href="{{ url_for('main.index') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
+                        <a class="nav-link text-dark" href="{{ url_for('main.about') }}">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('donations.marketplace') }}">Marketplace</a>
+                        <a class="nav-link text-dark" href="{{ url_for('donations.marketplace') }}">Marketplace</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('fundraising.index') }}">Fundraising</a>
+                        <a class="nav-link text-dark" href="{{ url_for('fundraising.index') }}">Fundraising</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('transparency.dashboard') }}">Transparency</a>
+                        <a class="nav-link text-dark" href="{{ url_for('transparency.dashboard') }}">Transparency</a>
                     </li>
                 </ul>
                 
                 <ul class="navbar-nav">
                     {% if session.user %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user"></i> {{ session.user.full_name }}
                             </a>
                             <ul class="dropdown-menu">
@@ -62,7 +68,7 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                            <a class="nav-link text-dark" href="{{ url_for('auth.login') }}">Login</a>
                         </li>
                         <li class="nav-item">
                             <a class="btn btn-primary ms-2" href="{{ url_for('auth.register') }}">Register</a>
@@ -80,7 +86,7 @@
                 {% for category, message in messages %}
                     <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert">
                     </div>
                 {% endfor %}
             </div>
